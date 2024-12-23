@@ -1,0 +1,48 @@
+# Node.js
+node_modules/
+npm-debug.log*
+
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Files
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build Output
+dist/
+build/
+
+# Cache
+.cache/
+*.pack
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# MacOS
+.DS_Store
+
+# Other
+*.bak
+*.tmp
+
+# Specific Folders (Optional if needed)
+Backend/node_modules/
+Backend/.cache/
+BeyondBackEnd/node_modules/
+BeyondBackEnd/.cache/
+FRONTEND/node_modules/
+FRONTEND/.cache/
