@@ -46,3 +46,7 @@ BeyondBackEnd/node_modules/
 BeyondBackEnd/.cache/
 FRONTEND/node_modules/
 FRONTEND/.cache/
+FRONTEND/.env
+FRONTEND/public/
+Backend/.env
+BeyondBackEnd/.env

@@ -6,6 +6,7 @@ import GenderTraffic from "./GenderTraffic";
 import GreetingCard from "./GreetingCard";
 import WidgetsWrapper from "./WidgetsWraper";
 import TrafficbyMonth from"./HourTraffic";
+import DayTraffic from "./DayTraffic";
 
 const Dashboard = () => {
   return (
@@ -17,6 +18,7 @@ const Dashboard = () => {
           <WidgetsWrapper />
           <GenderTraffic />
           <TrafficbyMonth/>
+          <DayTraffic/>
         </Row>
       </Container>
     </Fragment>

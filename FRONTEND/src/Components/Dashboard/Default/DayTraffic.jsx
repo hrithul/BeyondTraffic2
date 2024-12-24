@@ -4,7 +4,6 @@ import { H5 } from "../../../AbstractElements";
 import ReactApexChart from "react-apexcharts";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
-import DateFilter from "../../../CommonElements/Breadcrumbs/DateFilter";
 import {
   format,
   subDays,
@@ -15,26 +14,31 @@ import {
   subMonths,
   subWeeks,
   startOfYear,
+  parseISO,
+  getDay,
 } from "date-fns";
+import DateFilter from "../../../CommonElements/Breadcrumbs/DateFilter";
 
-const HourTraffic = () => {
+const DayTraffic = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [metricsData, setMetricsData] = useState([]);
+  const dateFilter = useSelector((state) => state.dateFilter.filter);
+  const deviceFilter = useSelector((state) => state.deviceFilter);
   const [chartData, setChartData] = useState({
     series: [
       {
         name: "Total",
-        data: Array(24).fill(0),
+        data: Array(7).fill(0),
       },
       {
         name: "Male",
-        data: Array(24).fill(0),
+        data: Array(7).fill(0),
       },
       {
         name: "Female",
-        data: Array(24).fill(0),
+        data: Array(7).fill(0),
       },
     ],
     options: {
@@ -60,23 +64,25 @@ const HourTraffic = () => {
         },
       },
       xaxis: {
-        categories: Array.from({ length: 24 }, (_, i) => {
-          const hour = i;
-          const period = hour >= 12 ? "PM" : "AM";
-          const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-          return `${hour12} ${period}`;
-
-        }),
+        categories: [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ],
         title: {
-          text: "Hours",
+          text: "Days",
           style: {
             fontSize: "0.75rem",
-            fontWeight: "semi-bold"
+            fontWeight: "semi-bold",
           },
         },
         labels: {
           style: {
-            fontSize: "9px",  
+            fontSize: "9px",
           },
         },
       },
@@ -85,8 +91,7 @@ const HourTraffic = () => {
           text: "Traffic",
           style: {
             fontSize: "0.75rem",
-            fontWeight: "semi-bold"
-
+            fontWeight: "semi-bold",
           },
         },
         labels: {
@@ -112,9 +117,6 @@ const HourTraffic = () => {
       },
     },
   });
-
-  const dateFilter = useSelector((state) => state.dateFilter.filter);
-  const deviceFilter = useSelector((state) => state.deviceFilter);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -146,13 +148,19 @@ const HourTraffic = () => {
     const todayDate = format(today, "yyyy-MM-dd");
     const yesterday = subDays(today, 1);
     const yesterdayDate = format(yesterday, "yyyy-MM-dd");
-    const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    const weekStart = format(startOfWeek(today), "yyyy-MM-dd");
     const monthStart = format(startOfMonth(today), "yyyy-MM-dd");
     const yearStart = format(startOfYear(today), "yyyy-MM-dd");
-    const prevWeekEnd = format(subDays(startOfWeek(today, { weekStartsOn: 1 }), 1), "yyyy-MM-dd");
-    const prevWeekStart = format(startOfWeek(subDays(startOfWeek(today, { weekStartsOn: 1 }), 1), { weekStartsOn: 1 }), "yyyy-MM-dd");
+    const prevWeekEnd = format(subDays(startOfWeek(today), 1), "yyyy-MM-dd");
+    const prevWeekStart = format(
+      startOfWeek(subDays(startOfWeek(today), 1)),
+      "yyyy-MM-dd"
+    );
     const prevMonthEnd = format(subDays(startOfMonth(today), 1), "yyyy-MM-dd");
-    const prevMonthStart = format(startOfMonth(subDays(startOfMonth(today), 1)), "yyyy-MM-dd");
+    const prevMonthStart = format(
+      startOfMonth(subDays(startOfMonth(today), 1)),
+      "yyyy-MM-dd"
+    );
 
     let filterStart, filterEnd;
     switch (dateFilter) {
@@ -193,76 +201,68 @@ const HourTraffic = () => {
         filterEnd = todayDate;
     }
 
-    // Initialize hourly data array with zeros
-    const hourlyData = Array(24).fill(0);
-    const maleData = Array(24).fill(0);
-    const femaleData = Array(24).fill(0);
+    const dailyTotals = Array(7).fill(0);
+    const dailyMale = Array(7).fill(0);
+    const dailyFemale = Array(7).fill(0);
 
     metrics.forEach((metric) => {
       const deviceId = metric.Metrics?.["@DeviceId"];
-      const report = metric.Metrics?.ReportData?.Report;
-      const reportDate = report?.["@Date"];
+      const selectedDeviceIds = Object.values(
+        deviceFilter.selectedDevices || {}
+      )
+        .flat()
+        .map((device) => device.device_id);
+      const isDeviceSelected =
+        selectedDeviceIds.length === 0 || selectedDeviceIds.includes(deviceId);
 
-      // Check if date is in range and device is selected
-      const selectedDeviceIds = Object.values(deviceFilter.selectedDevices || {}).flat().map(device => device.device_id);
-      const isDeviceSelected = selectedDeviceIds.length === 0 || selectedDeviceIds.includes(deviceId);
+      if (!isDeviceSelected) return;
 
-      if (reportDate && reportDate >= filterStart && reportDate <= filterEnd && isDeviceSelected) {
-        report.Object?.forEach((obj) => {
-          if (obj["@ObjectType"] === "0") { // Entrance Traffic
-            obj.Count?.forEach((count) => {
-              // Extract hour from StartTime (format: "HH:mm:00")
-              const hour = parseInt(count["@StartTime"].split(":")[0], 10);
-              // Sum up traffic for this hour
-              const totalTraffic = parseInt(count["@Exits"], 10) || 0;
-              const maleTraffic = parseInt(count["@ExitsMaleCustomer"], 10) || 0;
-              const femaleTraffic = parseInt(count["@ExitsFemaleCustomer"], 10) || 0;
-              
-              hourlyData[hour] += totalTraffic;
-              maleData[hour] += maleTraffic;
-              femaleData[hour] += femaleTraffic;
-            });
-          }
-        });
-      }
+      const reportDate = metric.Metrics?.ReportData?.Report?.["@Date"];
+      if (!reportDate || reportDate < filterStart || reportDate > filterEnd)
+        return;
+
+      const counts =
+        metric.Metrics?.ReportData?.Report?.Object?.[0]?.Count || [];
+      counts.forEach((count) => {
+        const date = parseISO(`${reportDate}T${count["@StartTime"]}`);
+        const dayIndex = getDay(date); // 0 for Sunday, 1 for Monday, etc.
+
+        dailyTotals[dayIndex] += parseInt(count["@Exits"]) || 0;
+        dailyMale[dayIndex] += parseInt(count["@ExitsMaleCustomer"]) || 0;
+        dailyFemale[dayIndex] += parseInt(count["@ExitsFemaleCustomer"]) || 0;
+      });
     });
 
-    setChartData(prevData => ({
-      ...prevData,
+    setChartData((prev) => ({
+      ...prev,
       series: [
-        {
-          name: "Total",
-          data: hourlyData
-        },
-        {
-          name: "Male",
-          data: maleData
-        },
-        {
-          name: "Female",
-          data: femaleData
-        }
-      ]
+        { name: "Total", data: dailyTotals },
+        { name: "Male", data: dailyMale },
+        { name: "Female", data: dailyFemale },
+      ],
     }));
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <Col xxl="6" lg="12" className="box-col-12">
       <Card>
         <CardHeader className="card-no-border">
           <div className="d-flex justify-content-between">
-            <H5>Hourly Traffic Distribution</H5>
-            {/* <DateFilter
-              onFilterSelect={(filter) => {
-                // Update the Redux store with the selected filter
-                dispatch({ type: "SET_DATE_FILTER", payload: filter });
-              }}
-              initialFilter={dateFilter}
-            /> */}
+            <H5>Daily Traffic Distribution</H5>
+            {/* <DateFilter 
+            onFilterSelect={(filter) => {
+              // Update the Redux store with the selected filter
+              dispatch({ type: 'SET_DATE_FILTER', payload: filter });
+            }}
+            initialFilter={dateFilter}
+          /> */}
           </div>
         </CardHeader>
         <CardBody className="pt-0">
-          <div className="hourly-traffic-chart">
+          <div className="daily-traffic-chart">
             <ReactApexChart
               type="line"
               height={350}
@@ -276,4 +276,4 @@ const HourTraffic = () => {
   );
 };
 
-export default HourTraffic;
+export default DayTraffic;

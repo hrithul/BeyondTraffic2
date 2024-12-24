@@ -23,11 +23,11 @@ const GenderTraffic = () => {
   const [chartData, setChartData] = useState({
     series: [
       {
-        name: "Female Traffic",
+        name: "Female",
         data: [],
       },
       {
-        name: "Male Traffic",
+        name: "Male",
         data: [],
       },
     ],
@@ -58,12 +58,27 @@ const GenderTraffic = () => {
       xaxis: {
         categories: [],
         title: {
-          text: "Date",
+          text: "- Date -",
+          style: {
+            fontSize: "0.75rem",
+            fontWeight: "semi-bold",
+          },
         },
       },
       yaxis: {
         title: {
-          text: "Traffic",
+          text: "- Traffic -",
+          style: {
+            fontSize: "0.75rem",
+            fontWeight: "semi-bold",
+          },
+        },
+        labels: {
+          style: {
+            fontSize: "10px",
+            fontWeight: 500,
+            colors: '#333'
+          }
         },
       },
       colors: ["#FF4560", "#008FFB"],
@@ -81,7 +96,7 @@ const GenderTraffic = () => {
       tooltip: {
         y: {
           formatter: function (val) {
-            return val + " Traffic";
+            return val + " visitors";
           },
         },
       },
@@ -227,19 +242,32 @@ const GenderTraffic = () => {
       ...prevData,
       series: [
         {
-          name: "Female Traffic",
+          name: "Female",
           data: femaleData,
         },
         {
-          name: "Male Traffic",
+          name: "Male",
           data: maleData,
         },
       ],
       options: {
         ...prevData.options,
         xaxis: {
-          ...prevData.options.xaxis,
-          categories: dates,
+          categories: dates.map(date => {
+            const [year, month, day] = date.split('-');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[parseInt(month, 10) - 1]}-${day}`;
+          }),
+          labels: {
+            rotate: -45,
+            rotateAlways: false,
+            style: {
+              fontSize: '8px',
+              fontWeight: 500,
+              colors: '#333'
+            }
+          },
+          tickPlacement: 'on'
         },
       },
     }));
