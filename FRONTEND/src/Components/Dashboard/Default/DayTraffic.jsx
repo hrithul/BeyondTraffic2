@@ -17,7 +17,6 @@ import {
   parseISO,
   getDay,
 } from "date-fns";
-import DateFilter from "../../../CommonElements/Breadcrumbs/DateFilter";
 
 const DayTraffic = () => {
   const dispatch = useDispatch();
@@ -32,18 +31,18 @@ const DayTraffic = () => {
         name: "Total",
         data: Array(7).fill(0),
       },
-      {
-        name: "Male",
-        data: Array(7).fill(0),
-      },
-      {
-        name: "Female",
-        data: Array(7).fill(0),
-      },
+      // {
+      //   name: "Male",
+      //   data: Array(7).fill(0),
+      // },
+      // {
+      //   name: "Female",
+      //   data: Array(7).fill(0),
+      // },
     ],
     options: {
       chart: {
-        type: "line",
+        type: "area",
         height: 350,
         toolbar: {
           show: true,
@@ -54,7 +53,19 @@ const DayTraffic = () => {
       },
       stroke: {
         curve: "smooth",
-        width: [4, 3, 3],
+        width: 2,
+      },
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          stops: [0, 90, 100],
+        },
+      },
+      dataLabels: {
+        enabled: false,
       },
       markers: {
         size: 4,
@@ -74,7 +85,7 @@ const DayTraffic = () => {
           "Saturday",
         ],
         title: {
-          text: "Days",
+          text: "- Days -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold",
@@ -88,7 +99,7 @@ const DayTraffic = () => {
       },
       yaxis: {
         title: {
-          text: "Traffic",
+          text: "- Traffic -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold",
@@ -101,7 +112,7 @@ const DayTraffic = () => {
         },
         min: 0,
       },
-      colors: ["#3CB371", "#008FFB", "#FF4560"],
+      colors: ["#7366FF", "#008FFB", "#FF4560"],
       tooltip: {
         y: {
           formatter: function (val) {
@@ -202,8 +213,8 @@ const DayTraffic = () => {
     }
 
     const dailyTotals = Array(7).fill(0);
-    const dailyMale = Array(7).fill(0);
-    const dailyFemale = Array(7).fill(0);
+    // const dailyMale = Array(7).fill(0);
+    // const dailyFemale = Array(7).fill(0);
 
     metrics.forEach((metric) => {
       const deviceId = metric.Metrics?.["@DeviceId"];
@@ -228,8 +239,8 @@ const DayTraffic = () => {
         const dayIndex = getDay(date); // 0 for Sunday, 1 for Monday, etc.
 
         dailyTotals[dayIndex] += parseInt(count["@Exits"]) || 0;
-        dailyMale[dayIndex] += parseInt(count["@ExitsMaleCustomer"]) || 0;
-        dailyFemale[dayIndex] += parseInt(count["@ExitsFemaleCustomer"]) || 0;
+        // dailyMale[dayIndex] += parseInt(count["@ExitsMaleCustomer"]) || 0;
+        // dailyFemale[dayIndex] += parseInt(count["@ExitsFemaleCustomer"]) || 0;
       });
     });
 
@@ -237,8 +248,8 @@ const DayTraffic = () => {
       ...prev,
       series: [
         { name: "Total", data: dailyTotals },
-        { name: "Male", data: dailyMale },
-        { name: "Female", data: dailyFemale },
+        // { name: "Male", data: dailyMale },
+        // { name: "Female", data: dailyFemale },
       ],
     }));
   };
@@ -264,7 +275,7 @@ const DayTraffic = () => {
         <CardBody className="pt-0">
           <div className="daily-traffic-chart">
             <ReactApexChart
-              type="line"
+              type="area"
               height={350}
               options={chartData.options}
               series={chartData.series}

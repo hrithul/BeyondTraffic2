@@ -28,14 +28,14 @@ const HourTraffic = () => {
         name: "Total",
         data: Array(24).fill(0),
       },
-      {
-        name: "Male",
-        data: Array(24).fill(0),
-      },
-      {
-        name: "Female",
-        data: Array(24).fill(0),
-      },
+      // {
+      //   name: "Male",
+      //   data: Array(24).fill(0),
+      // },
+      // {
+      //   name: "Female",
+      //   data: Array(24).fill(0),
+      // },
     ],
     options: {
       chart: {
@@ -68,7 +68,7 @@ const HourTraffic = () => {
 
         }),
         title: {
-          text: "Hours",
+          text: "- Hours -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold"
@@ -82,7 +82,7 @@ const HourTraffic = () => {
       },
       yaxis: {
         title: {
-          text: "Traffic",
+          text: "- Traffic -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold"
@@ -96,7 +96,7 @@ const HourTraffic = () => {
         },
         min: 0,
       },
-      colors: ["#3CB371", "#008FFB", "#FF4560"],
+      colors: ["#7366FF", "#008FFB", "#FF4560"],
       tooltip: {
         y: {
           formatter: function (val) {
@@ -195,8 +195,8 @@ const HourTraffic = () => {
 
     // Initialize hourly data array with zeros
     const hourlyData = Array(24).fill(0);
-    const maleData = Array(24).fill(0);
-    const femaleData = Array(24).fill(0);
+    // const maleData = Array(24).fill(0);
+    // const femaleData = Array(24).fill(0);
 
     metrics.forEach((metric) => {
       const deviceId = metric.Metrics?.["@DeviceId"];
@@ -215,12 +215,12 @@ const HourTraffic = () => {
               const hour = parseInt(count["@StartTime"].split(":")[0], 10);
               // Sum up traffic for this hour
               const totalTraffic = parseInt(count["@Exits"], 10) || 0;
-              const maleTraffic = parseInt(count["@ExitsMaleCustomer"], 10) || 0;
-              const femaleTraffic = parseInt(count["@ExitsFemaleCustomer"], 10) || 0;
+              // const maleTraffic = parseInt(count["@ExitsMaleCustomer"], 10) || 0;
+              // const femaleTraffic = parseInt(count["@ExitsFemaleCustomer"], 10) || 0;
               
               hourlyData[hour] += totalTraffic;
-              maleData[hour] += maleTraffic;
-              femaleData[hour] += femaleTraffic;
+              // maleData[hour] += maleTraffic;
+              // femaleData[hour] += femaleTraffic;
             });
           }
         });
@@ -234,14 +234,14 @@ const HourTraffic = () => {
           name: "Total",
           data: hourlyData
         },
-        {
-          name: "Male",
-          data: maleData
-        },
-        {
-          name: "Female",
-          data: femaleData
-        }
+        // {
+        //   name: "Male",
+        //   data: maleData
+        // },
+        // {
+        //   name: "Female",
+        //   data: femaleData
+        // }
       ]
     }));
   };

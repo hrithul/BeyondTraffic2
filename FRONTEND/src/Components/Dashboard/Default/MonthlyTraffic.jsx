@@ -28,14 +28,14 @@ const MonthlyTraffic = () => {
         name: "Total",
         data: Array(12).fill(0),
       },
-      {
-        name: "Male",
-        data: Array(12).fill(0),
-      },
-      {
-        name: "Female",
-        data: Array(12).fill(0),
-      },
+      // {
+      //   name: "Male",
+      //   data: Array(12).fill(0),
+      // },
+      // {
+      //   name: "Female",
+      //   data: Array(12).fill(0),
+      // },
     ],
     options: {
       chart: {
@@ -75,7 +75,7 @@ const MonthlyTraffic = () => {
           "Dec",
         ],
         title: {
-          text: "Months",
+          text: "- Months -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold",
@@ -89,7 +89,7 @@ const MonthlyTraffic = () => {
       },
       yaxis: {
         title: {
-          text: "Traffic",
+          text: "- Traffic -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold",
@@ -97,12 +97,14 @@ const MonthlyTraffic = () => {
         },
         labels: {
           style: {
-            fontSize: "9px",
+            fontSize: "10px",
+            fontWeight: 500,
+            colors: "#333",
           },
         },
         min: 0,
       },
-      colors: ["#3CB371", "#008FFB", "#FF4560"],
+      colors: ["#7366FF", "#008FFB", "#FF4560"],
       tooltip: {
         y: {
           formatter: function (val) {
@@ -122,7 +124,7 @@ const MonthlyTraffic = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get("http://localhost:3002/api/metrics");
+        const response = await axios.get("http://127.0.0.1:3002/api/metrics");
         const metrics = response.data;
         setMetricsData(metrics);
         calculateMetrics(metrics);
@@ -148,8 +150,8 @@ const MonthlyTraffic = () => {
     // Initialize arrays for each month
     const monthlyData = {
       total: Array(12).fill(0),
-      male: Array(12).fill(0),
-      female: Array(12).fill(0),
+      // male: Array(12).fill(0),
+      // female: Array(12).fill(0),
     };
 
     // Filter metrics based on device filter
@@ -212,12 +214,12 @@ const MonthlyTraffic = () => {
         if (obj["@ObjectType"] === "0") { // Entrance Traffic
           obj.Count.forEach((count) => {
             const exits = parseInt(count["@Exits"]) || 0;
-            const exitsMale = parseInt(count["@ExitsMaleCustomer"]) || 0;
-            const exitsFemale = parseInt(count["@ExitsFemaleCustomer"]) || 0;
+            // const exitsMale = parseInt(count["@ExitsMaleCustomer"]) || 0;
+            // const exitsFemale = parseInt(count["@ExitsFemaleCustomer"]) || 0;
 
             monthlyData.total[month] += exits;
-            monthlyData.male[month] += exitsMale;
-            monthlyData.female[month] += exitsFemale;
+            // monthlyData.male[month] += exitsMale;
+            // monthlyData.female[month] += exitsFemale;
           });
         }
       });
@@ -231,14 +233,14 @@ const MonthlyTraffic = () => {
           name: "Total",
           data: monthlyData.total,
         },
-        {
-          name: "Male",
-          data: monthlyData.male,
-        },
-        {
-          name: "Female",
-          data: monthlyData.female,
-        },
+        // {
+        //   name: "Male",
+        //   data: monthlyData.male,
+        // },
+        // {
+        //   name: "Female",
+        //   data: monthlyData.female,
+        // },
       ],
       options: {
         ...prevState.options,

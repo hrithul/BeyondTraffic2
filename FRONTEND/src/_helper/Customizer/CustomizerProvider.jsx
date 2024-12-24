@@ -12,7 +12,7 @@ const CustomizerProvider = (props) => {
   const [mixLayout, setMixLayout] = useState(false);
   const [sidebarResponsive, setSidebarResponsive] = useState(false);
   const [IsOpen, setIsClose] = useState(false);
-  const defaultLayoutObj = classes.find((item) => Object.values(item).pop(1) === 'compact-wrapper');
+  const defaultLayoutObj = classes.find((item) => Object.values(item).pop(1) === 'horizontal-wrapper');
   const layoutURL = localStorage.getItem('layout') || Object.keys(defaultLayoutObj).pop();
   const layoutValue = Object.values(defaultLayoutObj).pop();
   const location = window.location.pathname.split('/').pop();

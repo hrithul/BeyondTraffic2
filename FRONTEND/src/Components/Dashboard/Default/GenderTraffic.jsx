@@ -14,6 +14,7 @@ import {
   subMonths,
   subWeeks,
   startOfYear,
+  parseISO
 } from "date-fns";
 
 const GenderTraffic = () => {
@@ -35,25 +36,34 @@ const GenderTraffic = () => {
       chart: {
         type: "bar",
         height: 350,
-        stacked: false,
         toolbar: {
           show: true,
+        },
+        zoom: {
+          enabled: false,
         },
       },
       plotOptions: {
         bar: {
           horizontal: false,
           columnWidth: "35%",
+          endingShape: "rounded",
           borderRadius: 2,
+        },
+      },
+      stroke: {
+        curve: "smooth",
+        width: [4, 3, 3],
+      },
+      markers: {
+        size: 4,
+        strokeWidth: 2,
+        hover: {
+          size: 6,
         },
       },
       dataLabels: {
         enabled: false,
-      },
-      stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"],
       },
       xaxis: {
         categories: [],
@@ -62,6 +72,11 @@ const GenderTraffic = () => {
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold",
+          },
+        },
+        labels: {
+          style: {
+            fontSize: "9px",
           },
         },
       },
@@ -77,28 +92,24 @@ const GenderTraffic = () => {
           style: {
             fontSize: "10px",
             fontWeight: 500,
-            colors: '#333'
-          }
-        },
-      },
-      colors: ["#FF4560", "#008FFB"],
-      legend: {
-        position: "top",
-        markers: {
-          customHTML: () => {
-            return '<span style="width: 10px; height: 10px; background-color: currentColor; display: inline-block; border-radius: 50%;"></span>';
+            colors: "#333",
           },
         },
+        min: 0,
       },
-      fill: {
-        opacity: 1,
-      },
+      colors: ["#FF4560", "#008FFB"],
       tooltip: {
         y: {
           formatter: function (val) {
             return val + " visitors";
           },
         },
+      },
+      grid: {
+        borderColor: "#f1f1f1",
+      },
+      legend: {
+        position: "top",
       },
     },
   });
@@ -137,20 +148,12 @@ const GenderTraffic = () => {
     const todayDate = format(today, "yyyy-MM-dd");
     const yesterday = subDays(today, 1);
     const yesterdayDate = format(yesterday, "yyyy-MM-dd");
-    const weekStart = format(
-      startOfWeek(today, { weekStartsOn: 1 }),
-      "yyyy-MM-dd"
-    );
+    const weekStart = format(startOfWeek(today), "yyyy-MM-dd");
     const monthStart = format(startOfMonth(today), "yyyy-MM-dd");
     const yearStart = format(startOfYear(today), "yyyy-MM-dd");
-    const prevWeekEnd = format(
-      subDays(startOfWeek(today, { weekStartsOn: 1 }), 1),
-      "yyyy-MM-dd"
-    );
+    const prevWeekEnd = format(subDays(startOfWeek(today), 1), "yyyy-MM-dd");
     const prevWeekStart = format(
-      startOfWeek(subDays(startOfWeek(today, { weekStartsOn: 1 }), 1), {
-        weekStartsOn: 1,
-      }),
+      startOfWeek(subDays(startOfWeek(today), 1)),
       "yyyy-MM-dd"
     );
     const prevMonthEnd = format(subDays(startOfMonth(today), 1), "yyyy-MM-dd");
@@ -198,76 +201,105 @@ const GenderTraffic = () => {
         filterEnd = todayDate;
     }
 
-    // Group metrics by date and gender
-    const dailyData = {};
+    // Initialize data arrays based on filter
+    let maleData = [];
+    let femaleData = [];
+    let categories = [];
+
+    if (dateFilter === "year" || dateFilter === "lastYear") {
+      // Monthly data for year view
+      maleData = Array(12).fill(0);
+      femaleData = Array(12).fill(0);
+      categories = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      ];
+    } else {
+      // Create a map to store data by date
+      const dateMap = new Map();
+      
+      // Process metrics to get unique dates within filter range
+      metrics.forEach(metric => {
+        const reportDate = metric.Metrics?.ReportData?.Report?.["@Date"];
+        if (reportDate && reportDate >= filterStart && reportDate <= filterEnd) {
+          if (!dateMap.has(reportDate)) {
+            dateMap.set(reportDate, { male: 0, female: 0 });
+          }
+        }
+      });
+
+      // Sort dates
+      categories = Array.from(dateMap.keys()).sort();
+      maleData = Array(categories.length).fill(0);
+      femaleData = Array(categories.length).fill(0);
+    }
 
     metrics.forEach((metric) => {
       const deviceId = metric.Metrics?.["@DeviceId"];
-      const report = metric.Metrics?.ReportData?.Report;
-      const reportDate = report?.["@Date"];
+      const selectedDevices = Object.values(deviceFilter.selectedDevices || {})
+        .flat()
+        .map((device) => device.device_id);
+      const isDeviceSelected =
+        selectedDevices.length === 0 || selectedDevices.includes(deviceId);
 
-      // Check if date is in range and device is selected
-      const selectedDeviceIds = Object.values(deviceFilter.selectedDevices || {}).flat().map(device => device.device_id);
-      const isDeviceSelected = selectedDeviceIds.length === 0 || selectedDeviceIds.includes(deviceId);
+      if (!isDeviceSelected) return;
 
-      if (reportDate && reportDate >= filterStart && reportDate <= filterEnd && isDeviceSelected) {
-        if (!dailyData[reportDate]) {
-          dailyData[reportDate] = { male: 0, female: 0 };
-        }
+      const reportDate = metric.Metrics?.ReportData?.Report?.["@Date"];
+      if (!reportDate || reportDate < filterStart || reportDate > filterEnd)
+        return;
 
-        report.Object?.forEach((obj) => {
-          if (obj["@ObjectType"] === "0") { // Entrance Traffic
-            obj.Count?.forEach((count) => {
-              const maleExits = parseInt(count["@ExitsMaleCustomer"], 10) || 0;
-              const femaleExits = parseInt(count["@ExitsFemaleCustomer"], 10) || 0;
+      const counts = metric.Metrics?.ReportData?.Report?.Object?.[0]?.Count || [];
+      counts.forEach((count) => {
+        const maleCount = parseInt(count["@ExitsMaleCustomer"]) || 0;
+        const femaleCount = parseInt(count["@ExitsFemaleCustomer"]) || 0;
 
-              dailyData[reportDate].male += maleExits;
-              dailyData[reportDate].female += femaleExits;
-            });
+        if (dateFilter === "year" || dateFilter === "lastYear") {
+          const date = parseISO(reportDate);
+          const month = date.getMonth();
+          maleData[month] += maleCount;
+          femaleData[month] += femaleCount;
+        } else {
+          const dateIndex = categories.indexOf(reportDate);
+          if (dateIndex !== -1) {
+            maleData[dateIndex] += maleCount;
+            femaleData[dateIndex] += femaleCount;
           }
-        });
-      }
+        }
+      });
     });
 
-    // Debug logs
-    console.log('Selected Device IDs:', Object.values(deviceFilter.selectedDevices || {}).flat().map(device => device.device_id));
-    console.log('Daily Data:', dailyData);
-
-    // Convert to series data
-    const dates = Object.keys(dailyData).sort();
-    const maleData = dates.map((date) => dailyData[date].male);
-    const femaleData = dates.map((date) => dailyData[date].female);
-
-    setChartData((prevData) => ({
-      ...prevData,
+    setChartData((prev) => ({
+      ...prev,
       series: [
-        {
-          name: "Female",
-          data: femaleData,
-        },
-        {
-          name: "Male",
-          data: maleData,
-        },
+        { name: "Female", data: femaleData },
+        { name: "Male", data: maleData },
       ],
       options: {
-        ...prevData.options,
+        ...prev.options,
         xaxis: {
-          categories: dates.map(date => {
-            const [year, month, day] = date.split('-');
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            return `${monthNames[parseInt(month, 10) - 1]}-${day}`;
-          }),
-          labels: {
-            rotate: -45,
-            rotateAlways: false,
+          ...prev.options.xaxis,
+          categories: dateFilter === "year" || dateFilter === "lastYear" 
+            ? categories 
+            : categories.map(date => {
+                const [year, month, day] = date.split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${monthNames[parseInt(month, 10) - 1]}-${day}`;
+              }),
+          title: {
+            text: dateFilter === "year" || dateFilter === "lastYear" ? "- Months -" : "- Date -",
             style: {
-              fontSize: '8px',
-              fontWeight: 500,
-              colors: '#333'
-            }
+              fontSize: "0.75rem",
+              fontWeight: "semi-bold",
+            },
           },
-          tickPlacement: 'on'
+          labels: {
+            rotate: dateFilter === "year" || dateFilter === "lastYear" ? 0 : -45,
+            style: {
+              fontSize: dateFilter === "year" || dateFilter === "lastYear" ? "10px" : "9px",
+              fontWeight: 500,
+              colors: "#333",
+            },
+          },
         },
       },
     }));
@@ -279,50 +311,19 @@ const GenderTraffic = () => {
     <Col xxl="6" lg="12" className="box-col-12">
       <Card>
         <CardHeader className="card-no-border">
-          <H5>Gender-wise Traffic</H5>
+          <div className="d-flex justify-content-between">
+            <H5>Gender-wise Traffic</H5>
+          </div>
         </CardHeader>
         <CardBody className="pt-0">
-          <Row className="m-0 overall-card">
-            <Col xl="12" className="p-0">
-              <div className="chart-right">
-                <CardBody className="p-0">
-                  {/* <UL
-                    attrUL={{
-                      horizontal: true,
-                      className: "d-flex balance-data",
-                    }}
-                  >
-                    <LI>
-                      <span
-                        className="circle"
-                        style={{ backgroundColor: "#FF4560" }}
-                      >
-                        {" "}
-                      </span>
-                      <span className="f-light ms-1">Female Traffic</span>
-                    </LI>
-                    <LI>
-                      <span
-                        className="circle"
-                        style={{ backgroundColor: "#008FFB" }}
-                      >
-                        {" "}
-                      </span>
-                      <span className="f-light ms-1">Male Traffic</span>
-                    </LI>
-                  </UL> */}
-                  <div className="current-sale-container">
-                    <ReactApexChart
-                      type="bar"
-                      height={350}
-                      options={chartData.options}
-                      series={chartData.series}
-                    />
-                  </div>
-                </CardBody>
-              </div>
-            </Col>
-          </Row>
+          <div className="gender-traffic-chart">
+            <ReactApexChart
+              type="bar"
+              height={350}
+              options={chartData.options}
+              series={chartData.series}
+            />
+          </div>
         </CardBody>
       </Card>
     </Col>
