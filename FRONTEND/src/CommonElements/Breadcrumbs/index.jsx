@@ -8,6 +8,7 @@ import SvgIcon from '../../Components/Common/Component/SvgIcon';
 import DateFilter from './DateFilter';
 import DeviceFilter from './DeviceFilter';
 import { setDateFilter } from '../../redux/actions/dateFilterActions';
+import { setDeviceFilter } from '../../redux/actions/deviceFilterActions';
 
 const Breadcrumbs = (props) => {
   const { layoutURL } = useContext(CustomizerContext);
@@ -18,8 +19,7 @@ const Breadcrumbs = (props) => {
   };
 
   const handleDeviceFilterSelect = (filter) => {
-    // Handle the device filter selection
-    // Add your device filtering logic here
+    dispatch(setDeviceFilter(filter));
   };
 
   return (

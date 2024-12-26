@@ -98,6 +98,8 @@ import VideoChat from "../Components/Application/Chat/VideoChat";
 import Contact from "../Components/Application/settings/ContactApp";
 import Task from "../Components/Application/Task";
 import TodoContain from "../Components/Application/Todo";
+// //Analytics
+import Analytics from "../Components/Application/Analytics";
 
 // //Gallary
 import ImageGallery from "../Components/Gallery/ImageGallery";
@@ -117,6 +119,8 @@ import SamplePage from "../Components/Pages/Sample";
 
 // //Book mark
 import BookmarksContain from "../Components/Application/BookMarks";
+
+
 
 // //User app
 import UsersCardssContain from "../Components/Application/Users/UsersCards";
@@ -275,6 +279,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/app/chat-app/chats/:layout`, Component: <Chat /> },
   { path: `${process.env.PUBLIC_URL}/app/chat-app/chat-video-app/:layout`, Component: <VideoChat /> },
   { path: `${process.env.PUBLIC_URL}/app/settings/:layout`, Component: <Contact /> },
+  { path: `${process.env.PUBLIC_URL}/app/analytics/:layout`, Component: <Analytics /> },
 
   { path: `${process.env.PUBLIC_URL}/app/task/:layout`, Component: <Task /> },
   { path: `${process.env.PUBLIC_URL}/app/bookmark/:layout`, Component: <BookmarksContain /> },

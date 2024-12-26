@@ -18,7 +18,7 @@
     "axios": "^1.7.7",
     "body-scroll-lock": "^3.1.5",
     "bootstrap-scss": "^5.2.3",
-    "chart.js": "^4.2.1",
+    "chart.js": "^4.4.7",
     "chartjs-plugin-datalabels": "^2.2.0",
     "concurrently": "^8.0.1",
     "date-fns": "^2.29.3",

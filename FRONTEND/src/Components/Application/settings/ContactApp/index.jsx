@@ -7,7 +7,7 @@ const ContactFirebase = () => {
 
   return (
     <Fragment>
-      <Breadcrumbs mainTitle="Admin Settings" parent="Apps" title="Contact" />
+      <Breadcrumbs mainTitle="Admin Settings" parent="Apps" title="Admin Settings" />
       <Container fluid={true}>
         <div className="email-wrap bookmark-wrap">
           <Row>

@@ -51,10 +51,6 @@ const GenderTraffic = () => {
           borderRadius: 2,
         },
       },
-      stroke: {
-        curve: "smooth",
-        width: [4, 3, 3],
-      },
       markers: {
         size: 4,
         strokeWidth: 2,
