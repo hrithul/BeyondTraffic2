@@ -1,92 +1,155 @@
 import React, { useState, useRef, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import './DateFilter.css';
 
 const DateFilter = ({ onFilterSelect, initialFilter = 'today' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(initialFilter);
+  const [showCustomDates, setShowCustomDates] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState(null);
+  const [customEndDate, setCustomEndDate] = useState(null);
   const dropdownRef = useRef(null);
+  const datePickerRef = useRef(null);
 
-  useEffect(() => {
-    onFilterSelect(initialFilter);
-  }, []);
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
+  const dateFilters = [
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'week', label: 'This Week' },
+    { value: 'lastWeek', label: 'Last Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'lastMonth', label: 'Last Month' },
+    { value: 'year', label: 'This Year' },
+    { value: 'lastYear', label: 'Last Year' },
+    { value: 'custom', label: 'Custom Range' }
+  ];
 
   const handleDateFilterSelect = (filter) => {
+    if (filter === 'custom') {
+      setShowCustomDates(true);
+      setIsOpen(false);
+      return;
+    }
+    
     setSelectedFilter(filter);
-    setIsOpen(false);
+    setShowCustomDates(false);
     onFilterSelect(filter);
+    setIsOpen(false);
+  };
+
+  const handleCustomDateSubmit = () => {
+    if (customStartDate && customEndDate) {
+      setSelectedFilter('custom');
+      onFilterSelect({
+        type: 'custom',
+        startDate: customStartDate.toISOString().split('T')[0],
+        endDate: customEndDate.toISOString().split('T')[0]
+      });
+      setShowCustomDates(false);
+    }
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          datePickerRef.current && !datePickerRef.current.contains(event.target)) {
         setIsOpen(false);
+        if (!event.target.closest('.react-datepicker')) {
+          setShowCustomDates(false);
+        }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const dateFilters = [
-    { label: "Today", value: "today" },
-    { label: "Yesterday", value: "yesterday" },
-    { label: "This Week", value: "week" },
-    { label: "This Month", value: "month" },
-    { label: "This Year", value: "year" },
-
-    { label: "Last week", value: "lastWeek" },
-    { label: "Last month", value: "lastMonth" },
-    { label: "Last year", value: "lastYear" },
-  ];
-
   const getSelectedLabel = () => {
+    if (selectedFilter === 'custom' && customStartDate && customEndDate) {
+      return `${customStartDate.toLocaleDateString()} - ${customEndDate.toLocaleDateString()}`;
+    }
+    
     const filter = dateFilters.find(f => f.value === selectedFilter);
     return filter ? filter.label : 'Select Period';
   };
 
   return (
-    <div className="date-filter-container" ref={dropdownRef}>
-      <button
-        className={`filter-button ${selectedFilter ? "selected" : ""}`}
-        onClick={toggleDropdown}
-      >
-        {getSelectedLabel()} 🢓
-      </button>
+    <div className="date-filter-wrapper">
+      <div className="date-filter-container" ref={dropdownRef}>
+        <div
+          className={`date-filter-button ${isOpen ? "active" : ""}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <span>{getSelectedLabel()}</span>
+          <i className={`fa fa-angle-down ${isOpen ? "rotate" : ""}`}></i>
+        </div>
 
-      {isOpen && (
-        <div className="date-filter-dropdown">
-          {dateFilters.map((filter) => (
-            <div
-              key={filter.value}
-              className={`date-filter-item ${
-                selectedFilter === filter.value ? "selected" : ""
-              }`}
-              onClick={() => handleDateFilterSelect(filter.value)}
-            >
+        {isOpen && (
+          <div className="date-filter-dropdown">
+            {dateFilters.map((filter) => (
               <div
-                className={`date-filter-checkbox ${
+                key={filter.value}
+                className={`date-filter-item ${
                   selectedFilter === filter.value ? "selected" : ""
                 }`}
+                onClick={() => handleDateFilterSelect(filter.value)}
               >
-                {selectedFilter === filter.value && (
-                  <span className="date-filter-checkmark">✓</span>
-                )}
+                <div
+                  className={`date-filter-checkbox ${
+                    selectedFilter === filter.value ? "selected" : ""
+                  }`}
+                >
+                  {selectedFilter === filter.value && (
+                    <span className="date-filter-checkmark">✓</span>
+                  )}
+                </div>
+                <span
+                  className={`date-filter-label ${
+                    selectedFilter === filter.value ? "selected" : ""
+                  }`}
+                >
+                  {filter.label}
+                </span>
               </div>
-              <span
-                className={`date-filter-label ${
-                  selectedFilter === filter.value ? "selected" : ""
-                }`}
-              >
-                {filter.label}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showCustomDates && (
+        <div className="date-filter-custom-popup" ref={datePickerRef}>
+          <div className="date-picker-container">
+            <label>Start Date: </label>
+            <DatePicker
+              selected={customStartDate}
+              onChange={date => setCustomStartDate(date)}
+              selectsStart
+              startDate={customStartDate}
+              endDate={customEndDate}
+              maxDate={new Date()}
+              className="date-picker-input"
+            />
+          </div>
+          <div className="date-picker-container">
+            <label>End Date: </label>
+            <DatePicker
+              selected={customEndDate}
+              onChange={date => setCustomEndDate(date)}
+              selectsEnd
+              startDate={customStartDate}
+              endDate={customEndDate}
+              minDate={customStartDate}
+              maxDate={new Date()}
+              className="date-picker-input"
+            />
+          </div>
+          <button 
+            className="date-filter-apply"
+            onClick={handleCustomDateSubmit}
+            disabled={!customStartDate || !customEndDate}
+          >
+            Apply Range
+          </button>
         </div>
       )}
     </div>

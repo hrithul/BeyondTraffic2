@@ -318,6 +318,15 @@ const Chartpage = () => {
 
         // Sum up all values for each metric on this date
         countArray.forEach(metricData => {
+          const deviceId = metricData.Metrics?.["@DeviceId"];
+          const selectedDevices = Object.values(deviceFilter.selectedDevices || {})
+            .flat()
+            .map((device) => device.device_id);
+          const isDeviceSelected =
+            selectedDevices.length === 0 || selectedDevices.includes(deviceId);
+
+          if (!isDeviceSelected) return;
+
           const counts = metricData?.Metrics?.ReportData?.Report?.Object?.[0]?.Count || [];
           counts.forEach(count => {
             selectedMetrics.forEach(metric => {
@@ -402,64 +411,64 @@ const Chartpage = () => {
   };
 
   const isDateInRange = (date, filter) => {
-    const today = new Date();
-    const todayDate = format(today, "yyyy-MM-dd");
-    const yesterday = subDays(today, 1);
-    const yesterdayDate = format(yesterday, "yyyy-MM-dd");
-    const weekStart = format(startOfWeek(today), "yyyy-MM-dd");
-    const monthStart = format(startOfMonth(today), "yyyy-MM-dd");
-    const yearStart = format(startOfYear(today), "yyyy-MM-dd");
-    const prevWeekEnd = format(subDays(startOfWeek(today), 1), "yyyy-MM-dd");
-    const prevWeekStart = format(
-      startOfWeek(subDays(startOfWeek(today), 1)),
-      "yyyy-MM-dd"
-    );
-    const prevMonthEnd = format(subDays(startOfMonth(today), 1), "yyyy-MM-dd");
-    const prevMonthStart = format(
-      startOfMonth(subDays(startOfMonth(today), 1)),
-      "yyyy-MM-dd"
-    );
-
-    let filterStart, filterEnd;
-    switch (filter) {
-      case "today":
-        filterStart = todayDate;
-        filterEnd = todayDate;
-        break;
-      case "week":
-        filterStart = weekStart;
-        filterEnd = todayDate;
-        break;
-      case "month":
-        filterStart = monthStart;
-        filterEnd = todayDate;
-        break;
-      case "year":
-        filterStart = yearStart;
-        filterEnd = todayDate;
-        break;
-      case "yesterday":
-        filterStart = yesterdayDate;
-        filterEnd = yesterdayDate;
-        break;
-      case "lastWeek":
-        filterStart = prevWeekStart;
-        filterEnd = prevWeekEnd;
-        break;
-      case "lastMonth":
-        filterStart = prevMonthStart;
-        filterEnd = prevMonthEnd;
-        break;
-      case "lastYear":
-        filterStart = format(subMonths(today, 23), "yyyy-MM-dd");
-        filterEnd = format(subMonths(today, 12), "yyyy-MM-dd");
-        break;
-      default:
-        filterStart = todayDate;
-        filterEnd = todayDate;
+    if (!date) return false;
+    
+    const currentDate = new Date();
+    const [year, month, day] = date.split('-').map(Number);
+    const dateToCheck = new Date(year, month - 1, day);
+    
+    // Handle custom date range
+    if (typeof filter === 'object' && filter.type === 'custom') {
+      const startDate = new Date(filter.startDate);
+      const endDate = new Date(filter.endDate);
+      return dateToCheck >= startDate && dateToCheck <= endDate;
     }
 
-    return date >= filterStart && date <= filterEnd;
+    // Handle predefined filters
+    switch (filter) {
+      case 'today':
+        return dateToCheck.toDateString() === currentDate.toDateString();
+      
+      case 'yesterday': {
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return dateToCheck.toDateString() === yesterday.toDateString();
+      }
+      
+      case 'week': {
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+        return dateToCheck >= startOfWeek && dateToCheck <= currentDate;
+      }
+      
+      case 'lastWeek': {
+        const endOfLastWeek = new Date(currentDate);
+        endOfLastWeek.setDate(currentDate.getDate() - currentDate.getDay() - 1);
+        const startOfLastWeek = new Date(endOfLastWeek);
+        startOfLastWeek.setDate(endOfLastWeek.getDate() - 6);
+        return dateToCheck >= startOfLastWeek && dateToCheck <= endOfLastWeek;
+      }
+      
+      case 'month': {
+        return dateToCheck.getFullYear() === currentDate.getFullYear() &&
+               dateToCheck.getMonth() === currentDate.getMonth();
+      }
+      
+      case 'lastMonth': {
+        const lastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+        return dateToCheck.getFullYear() === lastMonth.getFullYear() &&
+               dateToCheck.getMonth() === lastMonth.getMonth();
+      }
+      
+      case 'year':
+        return dateToCheck.getFullYear() === currentDate.getFullYear();
+      
+      case 'lastYear':
+        return dateToCheck.getFullYear() === currentDate.getFullYear() - 1;
+      
+      default:
+        return false;
+    }
   };
 
   if (loading) return <div>Loading...</div>;

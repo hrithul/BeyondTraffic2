@@ -263,14 +263,14 @@ const handleOrganizationSelect = (org) => {
         if (!stores.length) {
           await fetchStores(region.id);
         }
-        
+
         // Select the region
         dispatch(setDeviceFilter({ selectedRegions: [...selectedRegions, region] }));
-        
+
         // Select all stores in this region
         const regionStores = stores.filter(store => store.region_id === region.id);
         dispatch(setDeviceFilter({ selectedStores: [...selectedStores, ...regionStores] }));
-        
+
         // Fetch and select all devices from these stores
         for (const store of regionStores) {
           const storeDevices = await fetchDevices(store.id);
@@ -279,12 +279,13 @@ const handleOrganizationSelect = (org) => {
       } else {
         // Deselect region
         dispatch(setDeviceFilter({ selectedRegions: selectedRegions.filter(r => r.id !== region.id) }));
-        
+
         // Deselect all stores in this region
-        dispatch(setDeviceFilter({ selectedStores: selectedStores.filter(s => s.region_id !== region.id) }));
-        
+        const regionStores = stores.filter(store => store.region_id === region.id);
+        dispatch(setDeviceFilter({ selectedStores: selectedStores.filter(s => !regionStores.includes(s)) }));
+
         // Remove all devices from these stores
-        dispatch(setDeviceFilter({ selectedDevices: Object.fromEntries(Object.entries(selectedDevices).filter(([storeId, devices]) => !stores.find(store => store.id === storeId && store.region_id === region.id)) ) }));
+        dispatch(setDeviceFilter({ selectedDevices: Object.fromEntries(Object.entries(selectedDevices).filter(([storeId, devices]) => !regionStores.find(store => store.id === storeId)) ) }));
       }
     } catch (error) {
       console.error("Error handling region checkbox:", error);
@@ -296,14 +297,14 @@ const handleOrganizationSelect = (org) => {
       if (checked) {
         // Select the store
         dispatch(setDeviceFilter({ selectedStores: [...selectedStores, store] }));
-        
+
         // Fetch and select all devices from this store
         const storeDevices = await fetchDevices(store.id);
         dispatch(setDeviceFilter({ selectedDevices: { ...selectedDevices, [store.id]: storeDevices } }));
       } else {
         // Deselect store
         dispatch(setDeviceFilter({ selectedStores: selectedStores.filter(s => s.id !== store.id) }));
-        
+
         // Remove all devices from this store
         dispatch(setDeviceFilter({ selectedDevices: Object.fromEntries(Object.entries(selectedDevices).filter(([storeId, devices]) => storeId !== store.id)) }));
       }
@@ -376,12 +377,14 @@ const handleOrganizationSelect = (org) => {
       aria-label="Device Filter"
     >
       <button
-        className={`filter-button ${totalSelectedDevices > 0 ? "active" : ""}`}
+        className={`filter-button ${totalSelectedDevices > 0 ? "active" : ""} ${isOpen ? "open" : ""}`}
         onClick={toggleFilter}
         aria-expanded={isOpen}
         aria-controls="filter-dropdown"
       >
-        {totalSelectedDevices > 0 && `✓ `}Filter 🢓
+        <i className={`fa fa-check ${totalSelectedDevices > 0 ? "visible" : "invisible"}`}></i>
+        Filter
+        <i className={`fa fa-angle-down ${isOpen ? "rotate" : ""}`}></i>
       </button>
 
       {isOpen && (
@@ -406,8 +409,11 @@ const handleOrganizationSelect = (org) => {
                   <CheckboxList
                     items={organizations}
                     selectedItems={selectedOrg ? [selectedOrg] : []}
-                    onItemSelect={(org) => handleOrganizationSelect(org)}
+                    onItemSelect={handleOrganizationSelect}
                     getLabel={(org) => `${org.name} (${org.count})`}
+                    onItemClick={handleOrganizationSelect}
+                    activeItem={selectedOrg}
+                    className="organization-item"
                   />
                 </Col>
 
@@ -417,7 +423,9 @@ const handleOrganizationSelect = (org) => {
                   <CheckboxList
                     items={regions}
                     selectedItems={selectedRegions}
-                    onItemSelect={(region, checked) =>handleRegionCheckbox(region, checked)}
+                    onItemSelect={(region, checked) =>
+                      handleRegionCheckbox(region, checked)
+                    }
                     getLabel={(region) => `${region.name} (${region.count})`}
                     onItemClick={handleRegionClick}
                     activeItem={activeRegion}

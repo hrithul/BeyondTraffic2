@@ -4,25 +4,50 @@
 }
 
 .filter-button {
-  padding: 8px 16px;
+  padding: 0.5rem 0.75rem;
+  padding-right: 1.6rem;
   background-color: rgb(255, 255, 255);
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 0.0625rem solid #ced4da;
+  border-radius: 0.3125rem;
   cursor: pointer;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   margin-right: 1rem;
 }
 
-.filter-button.active {
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
+.filter-button.open {
+  border-color: #7366ff;
+}
+.filter-button i .fa-angle-down{
+  margin-left: 10px;
+  transition: transform 0.3s ease;
+}
+.filter-button i.rotate{
+  transform: rotate(180deg);
 }
 
 .filter-button:hover {
   background-color: #f8f9fa;
+}
+
+
+.filter-button .set {
+  display: inline-block;
+}
+
+.filter-button i.fa-check {
+  margin-right: 0.3125rem;
+  transition: opacity 0.2s ease;
+}
+
+.filter-button i.visible {
+  opacity: 1;
+}
+
+.filter-button i.invisible {
+  opacity: 0;
 }
 
 .filter-dropdown {
