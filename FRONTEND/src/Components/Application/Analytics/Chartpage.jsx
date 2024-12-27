@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Col } from "reactstrap";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement, Filler } from 'chart.js';
+import { Line, Bar } from 'react-chartjs-2';
 import { H5 } from "../../../AbstractElements";
-import ReactApexChart from "react-apexcharts";
-import { useSelector } from "react-redux";
-import axios from "axios";
 import ChartDataSelector from './ChartDataSelector';
 import ChartTypeSelector, { chartTypes } from './ChartTypeSelector';
 import PieDonutChart from './PieDonutChart';
+import { useSelector } from "react-redux";
+import axios from "axios";
 import {
   format,
   subDays,
@@ -20,13 +21,24 @@ import {
   parseISO,
 } from "date-fns";
 
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
 const defaultChartOptions = {
   chart: {
     type: "bar",
     height: '100%',
-    // toolbar: {
-    //   show: true,
-    // },
     zoom: {
       enabled: false,
     },
@@ -122,70 +134,99 @@ const defaultChartOptions = {
 const Chartpage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [metricsData, setMetricsData] = useState([]);
+  const [metricsData, setMetricsData] = useState({});
   const [chartType, setChartType] = useState('bar');
   const [selectedMetrics, setSelectedMetrics] = useState([
-    { value: 'enters', label: 'Entries', field: '@Enters' },
-    { value: 'exits', label: 'Exits', field: '@Exits' }
+    { value: 'enters', label: 'Total Entries', field: '@Enters' },
+    { value: 'exits', label: 'Total Exits', field: '@Exits' },
+    { value: 'totalTraffic', label: 'Total Traffic', field: 'total' }
   ]);
   const [chartData, setChartData] = useState({
-    series: [],
-    options: {
-      chart: {
-        type: 'line',
-        height: 350,
-        toolbar: {
-          show: true
-        }
-      },
-      xaxis: {
-        type: 'category',
-        categories: [],
-        labels: {
-          show: true,
-          rotate: -45,
-          style: {
-            fontSize: '10px',
-            fontWeight: 500
-          }
-        }
-      },
-      yaxis: {
-        labels: {
-          formatter: function(val) {
-            return val.toFixed(0);
-          }
-        }
-      },
-      labels: [],
-      dataLabels: {
-        enabled: true
-      },
-      stroke: {
-        curve: 'smooth',
-        width: 2
-      },
-      tooltip: {
-        x: {
-          format: 'dd MMM yyyy'
-        }
-      },
-      legend: {
-        position: 'bottom',
-        horizontalAlign: 'center'
-      }
-    }
+    labels: [],
+    datasets: []
   });
 
   const dateFilter = useSelector((state) => state.dateFilter.filter);
   const deviceFilter = useSelector((state) => state.deviceFilter);
 
   const handleMetricsChange = (selected) => {
-    setSelectedMetrics(selected || []);
+    // Ensure we always have at least one metric selected
+    if (selected && selected.length > 0) {
+      setSelectedMetrics(selected);
+    } else {
+      // If user tries to remove all selections, revert to defaults
+      setSelectedMetrics([
+        { value: 'enters', label: 'Total Entries', field: '@Enters' },
+        { value: 'exits', label: 'Total Exits', field: '@Exits' },
+        { value: 'totalTraffic', label: 'Total Traffic', field: 'total' }
+      ]);
+    }
   };
 
   const handleChartTypeChange = (type) => {
     setChartType(type);
+  };
+
+  // Helper function to convert hex to rgba
+  const hexToRGBA = (hex, alpha) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Helper function to get color with opacity
+  const getColorWithOpacity = (rgbaColor, opacity) => {
+    // Extract the RGB values from the rgba string
+    const match = rgbaColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
+    if (!match) return rgbaColor;
+    
+    // Create new rgba with desired opacity
+    return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${opacity})`;
+  };
+
+  // Chart options
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: function(context) {
+            if (chartType === 'pie' || chartType === 'donut') {
+              const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+              const percentage = ((context.raw / total) * 100).toFixed(1);
+              return `${context.label}: ${context.raw} (${percentage}%)`;
+            }
+            return `${context.dataset.label}: ${context.raw}`;
+          }
+        }
+      }
+    },
+    scales: chartType !== 'pie' && chartType !== 'donut' ? {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return Math.round(value);
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
+    } : undefined
   };
 
   useEffect(() => {
@@ -193,8 +234,15 @@ const Chartpage = () => {
       try {
         const response = await axios.get("http://localhost:3002/api/metrics");
         const metrics = Array.isArray(response.data) ? response.data : [response.data];
-        setMetricsData(metrics);
-        calculateMetrics(metrics);
+        setMetricsData(metrics.reduce((acc, metric) => {
+          const date = metric?.Metrics?.ReportData?.Report?.["@Date"];
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(metric);
+          return acc;
+        }, {}));
+        calculateMetrics(metricsData);
       } catch (error) {
         console.error("Error fetching metrics:", error);
         setError("Failed to fetch metrics data");
@@ -209,172 +257,10 @@ const Chartpage = () => {
   }, []);
 
   useEffect(() => {
-    if (metricsData?.length > 0) {
+    if (metricsData && Object.keys(metricsData).length > 0) {
       calculateMetrics(metricsData);
     }
-  }, [dateFilter, deviceFilter, metricsData, selectedMetrics]);
-
-  useEffect(() => {
-    setChartData(prev => {
-      try {
-        console.log("Current Series:", prev?.series);
-        console.log("Selected Metrics:", selectedMetrics);
-        
-        // Normalize the series data structure
-        const normalizeSeriesData = (series) => {
-          if (!Array.isArray(series) || series.length === 0) {
-            return selectedMetrics.map(metric => ({
-              name: metric.label || 'Unnamed',
-              data: [0],
-              type: chartType
-            }));
-          }
-          
-          // If the series is an array of numbers (from pie chart), convert back to original structure
-          if (typeof series[0] === 'number') {
-            return selectedMetrics.map((metric, index) => ({
-              name: metric.label || 'Unnamed',
-              data: [series[index] || 0],
-              type: chartType
-            }));
-          }
-          
-          // Otherwise, process the regular series structure
-          return series.map((item, index) => ({
-            name: selectedMetrics[index]?.label || item?.name || 'Unnamed',
-            data: Array.isArray(item?.data) ? item.data.map(d => Number(d) || 0) : [0],
-            type: chartType
-          }));
-        };
-
-        // Get normalized series data
-        const originalSeries = normalizeSeriesData(prev?.series);
-        
-        console.log("Normalized Series:", originalSeries);
-
-        // Determine chart type
-        const isPieChart = ['pie', 'donut'].includes(chartType);
-
-        // Handle pie/donut chart data transformation
-        if (isPieChart) {
-          console.log("Processing pie chart data:", {
-            originalSeries,
-            selectedMetrics
-          });
-
-          // Ensure we have valid data
-          if (!Array.isArray(originalSeries) || originalSeries.length === 0 || !Array.isArray(selectedMetrics) || selectedMetrics.length === 0) {
-            console.log("Invalid data structure, returning default");
-            return {
-              series: [100],
-              options: {
-                labels: ["No Data"]
-              }
-            };
-          }
-
-          try {
-            // Get the latest values for each series
-            const pieData = originalSeries.map((series, index) => {
-              if (!series || !Array.isArray(series.data)) {
-                console.log(`Invalid series data for index ${index}`);
-                return { value: 0, name: selectedMetrics[index]?.label || 'Unknown' };
-              }
-
-              // Get the last non-zero value from the series
-              const lastValue = [...series.data]
-                .reverse()
-                .find(val => Number(val) > 0) || 0;
-              
-              return {
-                value: Number(lastValue),
-                name: selectedMetrics[index]?.label || 'Unknown'
-              };
-            }).filter(item => item.value > 0);
-
-            // If no valid data, return default
-            if (pieData.length === 0) {
-              console.log("No valid data points found");
-              return {
-                series: [100],
-                options: {
-                  labels: ["No Data"]
-                }
-              };
-            }
-
-            // Calculate percentages
-            const total = pieData.reduce((sum, item) => sum + item.value, 0);
-            const series = pieData.map(item => Number(((item.value / total) * 100).toFixed(1)));
-            const labels = pieData.map(item => item.name);
-
-            console.log("Pie chart data prepared:", {
-              pieData,
-              series,
-              labels,
-              total
-            });
-
-            // Return minimal chart configuration
-            return {
-              series: series.map(val => Number(val)),
-              options: {
-                labels: labels
-              }
-            };
-          } catch (error) {
-            console.error("Error processing pie chart data:", error);
-            return {
-              series: [100],
-              options: {
-                labels: ["Error"]
-              }
-            };
-          }
-        }
-
-        // Default configuration for line, bar, and area charts
-        const processedSeries = originalSeries.map(series => ({
-          name: series.name,
-          type: chartType,
-          data: Array.isArray(series.data) ? series.data.map(d => Number(d) || 0) : [0]
-        }));
-
-        return {
-          series: processedSeries,
-          options: {
-            chart: {
-              type: chartType,
-              height: 350,
-              toolbar: {
-                show: true
-              },
-              zoom: {
-                enabled: !isPieChart
-              }
-            },
-            dataLabels: {
-              enabled: true
-            },
-            stroke: {
-              curve: 'smooth',
-              width: 2
-            },
-            legend: {
-              position: 'bottom',
-              horizontalAlign: 'center'
-            },
-            noData: {
-              text: 'Loading...'
-            }
-          }
-        };
-      } catch (error) {
-        console.error("Error updating chart:", error);
-        return prev;
-      }
-    });
-  }, [chartType, selectedMetrics]);
+  }, [dateFilter, deviceFilter, metricsData, selectedMetrics, chartType]);
 
   const getMetricValue = (count = {}, metric = {}) => {
     if (!metric.field) return 0;
@@ -386,22 +272,136 @@ const Chartpage = () => {
     return parseInt(count[metric.field] || 0);
   };
 
-  const calculateMetrics = (metrics = []) => {
-    if (!Array.isArray(metrics) || metrics.length === 0) {
-      setChartData(prev => ({
-        ...prev,
-        series: [],
-        options: {
-          ...prev.options,
-          xaxis: {
-            ...prev.options.xaxis,
-            categories: []
-          }
-        }
-      }));
+  const metricColors = {
+    enters: "rgba(90, 200, 90, 0.90)", // Green for entries
+    exits: "rgba(255, 0, 0, 0.90)", // Red for exits
+    totalTraffic: "rgba(90, 110, 250, 0.90)", // Blue for total traffic
+
+    entersMale: "rgba(30, 144, 255, 0.70)", // Light green for male entries
+    exitsMale: "rgba(0, 0, 139, 0.70)", // Light red for male exits
+    entersFemale: "rgba(255, 105, 180, 0.70)", // Softer green for female entries
+    exitsFemale: "rgba(139, 0, 139, 0.70)", // Softer red for female exits
+    unknownEnters: "rgba(0, 128, 0, 0.50)", // Pale green for unknown entries
+    unknownExits: "rgba(255, 0, 0, 0.50)", // Pale red for unknown exits
+  };
+
+  const calculateMetrics = (metrics = {}) => {
+    if (!metrics || Object.keys(metrics).length === 0) {
+      setChartData({
+        labels: [],
+        datasets: []
+      });
       return;
     }
 
+    console.log("Calculating metrics for chart type:", chartType);
+    console.log("Selected metrics:", selectedMetrics);
+
+    const categories = [];
+    const seriesData = {};
+
+    // Initialize series data for each metric
+    selectedMetrics.forEach(metric => {
+      seriesData[metric.value] = [];
+    });
+
+    // Process data based on date filter
+    Object.entries(metrics).forEach(([date, countArray]) => {
+      if (isDateInRange(date, dateFilter)) {
+        categories.push(date);
+        
+        // Initialize metric values for this date
+        const dateMetrics = {};
+        selectedMetrics.forEach(metric => {
+          dateMetrics[metric.value] = 0;
+        });
+
+        // Sum up all values for each metric on this date
+        countArray.forEach(metricData => {
+          const counts = metricData?.Metrics?.ReportData?.Report?.Object?.[0]?.Count || [];
+          counts.forEach(count => {
+            selectedMetrics.forEach(metric => {
+              if (metric.value === 'totalTraffic') {
+                return;
+              }
+              const value = parseInt(count[metric.field] || 0);
+              dateMetrics[metric.value] += isNaN(value) ? 0 : value;
+            });
+          });
+        });
+
+        // Calculate total traffic if selected
+        if (selectedMetrics.some(m => m.value === 'totalTraffic')) {
+          dateMetrics['totalTraffic'] = dateMetrics['enters'] + dateMetrics['exits'];
+        }
+
+        // Add the summed values to series data
+        selectedMetrics.forEach(metric => {
+          seriesData[metric.value].push(dateMetrics[metric.value]);
+        });
+      }
+    });
+
+    // Sort categories chronologically
+    categories.sort((a, b) => new Date(a) - new Date(b));
+
+    // Format labels based on date filter
+    const formattedLabels = dateFilter === "year" || dateFilter === "lastYear"
+      ? categories
+      : categories.map((date) => {
+          const [year, month, day] = date.split("-");
+          const monthNames = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+          ];
+          return `${monthNames[parseInt(month, 10) - 1]}-${day}`;
+        });
+
+    if (chartType === 'pie' || chartType === 'donut') {
+      // For pie/donut charts, use the sum of all values for each metric
+      const totalValues = selectedMetrics.map(metric => {
+        return seriesData[metric.value].reduce((sum, val) => sum + val, 0);
+      });
+
+      const chartData = {
+        labels: selectedMetrics.map(m => m.label),
+        datasets: [{
+          data: totalValues,
+          backgroundColor: selectedMetrics.map(metric => metricColors[metric.value]),
+          borderColor: Array(selectedMetrics.length).fill('#ffffff'),
+          borderWidth: 1
+        }]
+      };
+
+      console.log("Setting pie/donut chart data:", chartData);
+      setChartData(chartData);
+    } else {
+      // For other charts
+      const datasets = selectedMetrics.map((metric) => {
+        const color = metricColors[metric.value];
+        return {
+          label: metric.label,
+          data: seriesData[metric.value],
+          borderColor: color,
+          backgroundColor: chartType === 'area' 
+            ? getColorWithOpacity(color, 0.2) // Reduced opacity for area chart fill
+            : color,
+          fill: chartType === 'area',
+          tension: 0.4
+        };
+      });
+
+      const chartData = {
+        labels: formattedLabels,
+        datasets
+      };
+
+      console.log("Setting regular chart data:", chartData);
+      setChartData(chartData);
+    }
+  };
+
+  const isDateInRange = (date, filter) => {
     const today = new Date();
     const todayDate = format(today, "yyyy-MM-dd");
     const yesterday = subDays(today, 1);
@@ -421,7 +421,7 @@ const Chartpage = () => {
     );
 
     let filterStart, filterEnd;
-    switch (dateFilter) {
+    switch (filter) {
       case "today":
         filterStart = todayDate;
         filterEnd = todayDate;
@@ -459,109 +459,7 @@ const Chartpage = () => {
         filterEnd = todayDate;
     }
 
-    let categories = [];
-    let seriesData = {};
-
-    if (dateFilter === "year" || dateFilter === "lastYear") {
-      categories = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-      ];
-      selectedMetrics.forEach(metric => {
-        seriesData[metric.value] = Array(12).fill(0);
-      });
-    } else {
-      const dateMap = new Map();
-      metrics.forEach((metric) => {
-        const reportDate = metric?.Metrics?.ReportData?.Report?.["@Date"];
-        if (reportDate && reportDate >= filterStart && reportDate <= filterEnd) {
-          dateMap.set(reportDate, true);
-        }
-      });
-      categories = Array.from(dateMap.keys()).sort();
-      selectedMetrics.forEach(metric => {
-        seriesData[metric.value] = Array(categories.length).fill(0);
-      });
-    }
-
-    metrics.forEach((metric) => {
-      const deviceId = metric?.Metrics?.["@DeviceId"];
-      const selectedDevices = Object.values(deviceFilter?.selectedDevices || {})
-        .flat()
-        .map((device) => device?.device_id);
-      const isDeviceSelected =
-        !selectedDevices.length || selectedDevices.includes(deviceId);
-
-      if (!isDeviceSelected) return;
-
-      const reportDate = metric?.Metrics?.ReportData?.Report?.["@Date"];
-      if (!reportDate || reportDate < filterStart || reportDate > filterEnd)
-        return;
-
-      const counts = metric?.Metrics?.ReportData?.Report?.Object?.[0]?.Count || [];
-      counts.forEach((count) => {
-        if (!count) return;
-        selectedMetrics.forEach(metric => {
-          const value = getMetricValue(count, metric);
-          if (dateFilter === "year" || dateFilter === "lastYear") {
-            const date = parseISO(reportDate);
-            const month = date.getMonth();
-            seriesData[metric.value][month] += value;
-          } else {
-            const dateIndex = categories.indexOf(reportDate);
-            if (dateIndex !== -1) {
-              seriesData[metric.value][dateIndex] += value;
-            }
-          }
-        });
-      });
-    });
-
-    const series = selectedMetrics.map(metric => ({
-      name: metric.label,
-      data: seriesData[metric.value] || []
-    }));
-    console.log("Series:",series)
-
-    setChartData((prev) => ({
-      ...prev,
-      series,
-      options: {
-        ...prev.options,
-        xaxis: {
-          ...((prev.options && prev.options.xaxis) || {}),
-          categories: dateFilter === "year" || dateFilter === "lastYear"
-            ? categories
-            : categories.map((date) => {
-                const [year, month, day] = date.split("-");
-                const monthNames = [
-                  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-                ];
-                return `${monthNames[parseInt(month, 10) - 1]}-${day}`;
-              }),
-          title: {
-            text: dateFilter === "year" || dateFilter === "lastYear"
-              ? "- Months -"
-              : "- Date -",
-            style: {
-              fontSize: "14px",
-              fontWeight: "600"
-            },
-          },
-          labels: {
-            rotate: dateFilter === "year" || dateFilter === "lastYear" ? 0 : -45,
-            style: {
-              fontSize: dateFilter === "year" || dateFilter === "lastYear"
-                ? "10px"
-                : "9px",
-              fontWeight: 500,
-              colors: "#333",
-            },
-          },
-        },
-      },
-    }));
+    return date >= filterStart && date <= filterEnd;
   };
 
   if (loading) return <div>Loading...</div>;
@@ -575,7 +473,7 @@ const Chartpage = () => {
             <H5>Traffic Analysis</H5>
             <div className="d-flex gap-3 align-items-center">
               <ChartDataSelector
-                selectedData={selectedMetrics}
+                selectedMetrics={selectedMetrics}
                 onChange={handleMetricsChange}
               />
               <ChartTypeSelector
@@ -583,32 +481,34 @@ const Chartpage = () => {
                 onChange={handleChartTypeChange}
               />
             </div>
-        </div>
-      </CardHeader>
-      <CardBody className="pt-0">
-        <div style={{
-          height: '400px',
-          width: '100%',
-          position: 'relative'
-        }}>
-          {chartType === 'pie' || chartType === 'donut' ? (
-            <PieDonutChart
-              chartData={chartData}
-              selectedMetrics={selectedMetrics}
-              isDonutChart={chartType === 'donut'}
-            />
-          ) : (
-            <ReactApexChart
-              type={chartType}
-              height="100%"
-              options={chartData.options}
-              series={chartData.series}
-            />
-          )}
-        </div>
-      </CardBody>
-    </Card>
-  </Col>
+          </div>
+        </CardHeader>
+        <CardBody className="pt-0">
+          <div style={{
+            height: '400px',
+            width: '100%',
+            position: 'relative'
+          }}>
+            {['pie', 'donut'].includes(chartType) ? (
+              <PieDonutChart
+                chartData={chartData}
+                isDonutChart={chartType === 'donut'}
+              />
+            ) : chartType === 'bar' ? (
+              <Bar
+                data={chartData}
+                options={chartOptions}
+              />
+            ) : (
+              <Line
+                data={chartData}
+                options={chartOptions}
+              />
+            )}
+          </div>
+        </CardBody>
+      </Card>
+    </Col>
   );
 };
 

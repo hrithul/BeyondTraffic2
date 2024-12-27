@@ -1,92 +1,73 @@
-import React from "react";
-import Chart from "react-apexcharts";
+import React from 'react';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const PieDonutChart = ({ chartData, isDonutChart }) => {
-  // Create base chart options
-  const baseOptions = {
-    chart: {
-      type: isDonutChart ? "donut" : "pie",
-      height: 350,
-      toolbar: {
-        show: false
-      }
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '65%'
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          generateLabels: function(chart) {
+            const data = chart.data;
+            if (data.labels.length && data.datasets.length) {
+              const dataset = data.datasets[0];
+              const total = dataset.data.reduce((sum, value) => sum + value, 0);
+              
+              return data.labels.map((label, i) => {
+                const value = dataset.data[i];
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                return {
+                  text: `${label}: ${value} (${percentage}%)`,
+                  fillStyle: dataset.backgroundColor[i],
+                  hidden: false,
+                  index: i
+                };
+              });
+            }
+            return [];
+          }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
+            const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+            return `${context.label}: ${context.raw} (${percentage}%)`;
+          }
         }
       }
     },
-    dataLabels: {
-      enabled: true,
-      formatter: function (val) {
-        return val.toFixed(1) + "%";
-      }
-    },
-    legend: {
-      show: true,
-      position: "bottom"
-    },
-    responsive: [{
-      breakpoint: 480,
-      options: {
-        chart: {
-          width: 200
-        },
-        legend: {
-          position: 'bottom'
-        }
-      }
-    }]
+    cutout: isDonutChart ? '65%' : 0
   };
 
-  // Default data for empty state
-  const defaultData = {
-    series: [{ data: [100] }],
-    options: {
-      ...baseOptions,
-      labels: ["No Data"]
-    }
-  };
-
-  // Validate chart data
-  if (!chartData || !Array.isArray(chartData.series) || !chartData.options?.labels) {
-    console.log("Invalid chart data, using default:", defaultData);
+  // If no data or invalid data, show empty chart
+  if (!chartData?.datasets?.[0]?.data || chartData.datasets[0].data.length === 0) {
+    const emptyData = {
+      labels: ['No Data'],
+      datasets: [{
+        data: [1],
+        backgroundColor: ['#e0e0e0'],
+        borderWidth: 1
+      }]
+    };
     return (
-      <div className="pie-donut-chart">
-        <Chart
-          options={defaultData.options}
-          series={defaultData.series[0].data}
-          type={isDonutChart ? "donut" : "pie"}
-          height={350}
-        />
+      <div style={{ height: '350px', position: 'relative' }}>
+        <Pie data={emptyData} options={options} />
       </div>
     );
   }
 
-  // Ensure series is in the correct format
-  const validSeries = chartData.series.map(val => Number(val) || 0);
-
-  // Merge chart options
-  const options = {
-    ...baseOptions,
-    labels: chartData.options.labels
-  };
-
-  console.log("Rendering chart with:", {
-    options,
-    series: validSeries
-  });
-
   return (
-    <div className="pie-donut-chart">
-      <Chart
-        options={options}
-        series={validSeries}
-        type={isDonutChart ? "donut" : "pie"}
-        height={350}
-      />
+    <div style={{ height: '350px', position: 'relative' }}>
+      <Pie data={chartData} options={options} />
     </div>
   );
 };

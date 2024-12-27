@@ -1,50 +1,22 @@
 import React from 'react';
 import Select from 'react-select';
 
-const dataOptions = [
-  {
-    value: "gender",
-    label: "Gender Distribution",
-    options: [
-      {
-        value: "entersMale",
-        label: "Male Entries",
-        field: "@EntersMaleCustomer",
-      },
-      { value: "exitsMale", label: "Male Exits", field: "@ExitsMaleCustomer" },
-      {
-        value: "entersFemale",
-        label: "Female Entries",
-        field: "@EntersFemaleCustomer",
-      },
-      {
-        value: "exitsFemale",
-        label: "Female Exits",
-        field: "@ExitsFemaleCustomer",
-      },
-      {
-        value: "unknownEnters",
-        label: "Unknown Entries",
-        field: "@EntersUnknown",
-      },
-      { value: "unknownExits", label: "Unknown Exits", field: "@ExitsUnknown" },
-    ],
-  },
-  {
-    value: "traffic",
-    label: "Traffic Flow",
-    options: [
-      { value: "enters", label: "Total Entries", field: "@Enters" },
-      { value: "exits", label: "Total Exits", field: "@Exits" },
-    ],
-  },
-  {
-    value: "combined",
-    label: "Combined Metrics",
-    options: [
-      { value: "totalTraffic", label: "Total Traffic", field: "total" },
-    ],
-  },
+export const metricOptions = [
+  { value: 'enters', label: 'Total Entries', field: '@Enters' },
+  { value: 'exits', label: 'Total Exits', field: '@Exits' },
+  { value: 'totalTraffic', label: 'Total Traffic', field: 'total' },
+  { value: 'entersMale', label: 'Male Entries', field: '@EntersMaleCustomer' },
+  { value: 'exitsMale', label: 'Male Exits', field: '@ExitsMaleCustomer' },
+  { value: 'entersFemale', label: 'Female Entries', field: '@EntersFemaleCustomer' },
+  { value: 'exitsFemale', label: 'Female Exits', field: '@ExitsFemaleCustomer' },
+  { value: 'unknownEnters', label: 'Unknown Entries', field: '@EntersUnknown' },
+  { value: 'unknownExits', label: 'Unknown Exits', field: '@ExitsUnknown' }
+];
+
+const defaultSelections = [
+  metricOptions[0], // Total Entries
+  metricOptions[1], // Total Exits
+  metricOptions[2]  // Total Traffic
 ];
 
 const selectStyles = {
@@ -75,6 +47,7 @@ const selectStyles = {
   multiValue: (base) => ({
     ...base,
     backgroundColor: '#7366FF20',
+    borderRadius: '4px'
   }),
   multiValueLabel: (base) => ({
     ...base,
@@ -84,7 +57,7 @@ const selectStyles = {
   multiValueRemove: (base) => ({
     ...base,
     color: '#7366FF',
-    '&:hover': {
+    ':hover': {
       backgroundColor: '#7366FF',
       color: 'white'
     }
@@ -95,17 +68,22 @@ const selectStyles = {
   })
 };
 
-const ChartDataSelector = ({ selectedData, onChange }) => (
-  <Select
-    isMulti
-    options={dataOptions}
-    value={selectedData}
-    onChange={onChange}
-    styles={selectStyles}
-    placeholder="Select metrics..."
-    className="basic-multi-select"
-    classNamePrefix="select"
-  />
-);
+const ChartDataSelector = ({ selectedMetrics, onChange }) => {
+  // If no selections, use default
+  const value = selectedMetrics?.length > 0 ? selectedMetrics : defaultSelections;
+
+  return (
+    <Select
+      isMulti
+      options={metricOptions}
+      value={value}
+      onChange={onChange}
+      styles={selectStyles}
+      placeholder="Select metrics..."
+      className="basic-multi-select"
+      classNamePrefix="select"
+    />
+  );
+};
 
 export default ChartDataSelector;

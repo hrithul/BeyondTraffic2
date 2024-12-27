@@ -2,8 +2,8 @@ import React from 'react';
 import Select from 'react-select';
 
 export const chartTypes = [
-  { value: 'line', label: 'Line Chart' },
   { value: 'bar', label: 'Bar Chart' },
+  { value: 'line', label: 'Line Chart' },
   { value: 'area', label: 'Area Chart' },
   { value: 'pie', label: 'Pie Chart' },
   { value: 'donut', label: 'Donut Chart' }
@@ -12,7 +12,7 @@ export const chartTypes = [
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    minWidth: '120px',
+    minWidth: '150px',
     border: `1px solid ${state.isFocused ? '#7366FF' : '#ced4da'}`,
     boxShadow: state.isFocused ? '0 0 0 1px #7366FF' : 'none',
     borderRadius: '0.25rem',
@@ -44,16 +44,18 @@ const selectStyles = {
   })
 };
 
-const ChartTypeSelector = ({ selectedType, onChange }) => (
-  <Select
-    options={chartTypes}
-    value={chartTypes.find(type => type.value === selectedType)}
-    onChange={(option) => onChange(option.value)}
-    styles={selectStyles}
-    placeholder="Select chart type..."
-    className="basic-select"
-    classNamePrefix="select"
-  />
-);
+const ChartTypeSelector = ({ selectedType, onChange }) => {
+  return (
+    <Select
+      options={chartTypes}
+      value={chartTypes.find(type => type.value === selectedType)}
+      onChange={(option) => onChange(option.value)}
+      styles={selectStyles}
+      placeholder="Select chart type..."
+      className="basic-select"
+      classNamePrefix="select"
+    />
+  );
+};
 
 export default ChartTypeSelector;
