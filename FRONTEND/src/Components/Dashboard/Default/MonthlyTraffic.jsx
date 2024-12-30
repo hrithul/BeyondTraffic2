@@ -15,6 +15,7 @@ import {
   subWeeks,
   parseISO,
 } from "date-fns";
+import config from "../../../config";
 
 const MonthlyTraffic = () => {
   const dateFilter = useSelector((state) => state.dateFilter.filter);
@@ -124,7 +125,7 @@ const MonthlyTraffic = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:3002/api/metrics");
+        const response = await axios.get(config.hostname+"/metrics");
         const metrics = response.data;
         setMetricsData(metrics);
         calculateMetrics(metrics);

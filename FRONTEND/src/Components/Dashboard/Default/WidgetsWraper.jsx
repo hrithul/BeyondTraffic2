@@ -5,7 +5,7 @@ import Widgets1 from '../../Common/CommonWidgets/Widgets1';
 import Widgets2 from '../../Common/CommonWidgets/Widgets2';
 import axios from 'axios';
 import { format, subDays, startOfMonth, startOfWeek, endOfMonth, endOfWeek, subMonths, subWeeks, startOfYear  } from 'date-fns';
-
+import config from "../../../config";
 const WidgetsWrapper = () => {
   const [metricsData, setMetricsData] = useState([]);
   const [widgetStats, setWidgetStats] = useState({
@@ -32,7 +32,7 @@ const WidgetsWrapper = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get('http://localhost:3002/api/metrics');
+        const response = await axios.get(`${config.hostname}/metrics`);
         const metrics = response.data;
         setMetricsData(metrics);
         calculateMetrics(metrics, dateFilter, deviceFilter);

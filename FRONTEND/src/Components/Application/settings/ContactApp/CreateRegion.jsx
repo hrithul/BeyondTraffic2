@@ -6,6 +6,7 @@ import { Users } from 'react-feather';
 import { Row, Col, Modal, ModalHeader, ModalBody, Label, Input, FormGroup, Form } from 'reactstrap';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
+import config from "../../../../config";
 
 const CreateContact = () => {
   const [modal, setModal] = useState(false);
@@ -31,7 +32,7 @@ const CreateContact = () => {
 
   const AddContact = async (data) => {
     try {
-      const checkResponse = await fetch('http://localhost:3002/api/region');
+      const checkResponse = await fetch(config.hostname+'/region');
       const existingRegions = await checkResponse.json();
       
       if (existingRegions.data.some(region => region.code === data.code.toUpperCase())) {
@@ -45,7 +46,7 @@ const CreateContact = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:3002/api/region/create', {
+      const response = await fetch(config.hostname+'/region/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

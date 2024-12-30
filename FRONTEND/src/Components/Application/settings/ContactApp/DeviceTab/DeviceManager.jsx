@@ -14,6 +14,7 @@ import {
 import { H6, P } from "../../../../../AbstractElements";
 import axios from "axios";
 import Swal from "sweetalert2";
+import config from "../../../../../config";
 
 const DeviceManager = ({ callback = () => {} }) => {
   const [deviceList, setDeviceList] = useState([]);
@@ -85,7 +86,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
   const fetchDeviceData = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/device");
+      const response = await axios.get(config.hostname+"/device");
       if (response.data && response.data.success) {
         setDeviceList(response.data.data);
       } else {
@@ -100,7 +101,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
   const fetchStoreData = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/store");
+      const response = await axios.get(config.hostname+"/store");
       if (response.data && response.data.success) {
         setStoreList(response.data.data);
       } else {
@@ -113,7 +114,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
   const fetchRegionData = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/region");
+      const response = await axios.get(config.hostname+"/region");
       if (response.data && response.data.success) {
         setRegionList(response.data.data);
       } else {
@@ -127,7 +128,7 @@ const DeviceManager = ({ callback = () => {} }) => {
   const fetchOrgData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3002/api/organization"
+        config.hostname+"/organization"
       );
       if (response.data && response.data.success) {
         setOrgList(response.data.data);
@@ -195,7 +196,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
     try {
       // Check if device ID already exists (excluding current device)
-      const deviceResponse = await axios.get("http://localhost:3002/api/device");
+      const deviceResponse = await axios.get(config.hostname+"/device");
       const existingDevices = deviceResponse.data.data;
       
       const deviceWithSameId = existingDevices.find(
@@ -224,7 +225,7 @@ const DeviceManager = ({ callback = () => {} }) => {
         active,
       };
       const response = await axios.put(
-        `http://localhost:3002/api/device/${selectedDevice._id}`,
+        `${config.hostname}/device/${selectedDevice._id}`,
         updatedData
       );
       if (response.data.success) {
@@ -264,7 +265,7 @@ const DeviceManager = ({ callback = () => {} }) => {
     if (result.isConfirmed) {
       try {
         const response = await axios.delete(
-          `http://localhost:3002/api/device/${id}`
+          `${config.hostname}/device/${id}`
         );
         if (response.data.success) {
           fetchDeviceData();
@@ -295,7 +296,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
     if (newDeviceId && newDeviceId !== selectedDevice.device_id) {
       try {
-        const response = await axios.get("http://localhost:3002/api/device");
+        const response = await axios.get(config.hostname+"/device");
         const existingDevices = response.data.data;
         
         const deviceWithSameId = existingDevices.find(

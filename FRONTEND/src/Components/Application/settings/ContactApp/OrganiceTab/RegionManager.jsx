@@ -14,6 +14,7 @@ import {
 import { Image, H6, P } from "../../../../../AbstractElements";
 import axios from "axios";
 import Swal from "sweetalert2";
+import config from "../../../../../config"
 
 const RegionManager = ({ callback = () => {} }) => {
   const [orgList, setOrgList] = useState([]);
@@ -29,7 +30,7 @@ const RegionManager = ({ callback = () => {} }) => {
 
   const fetchOrgData = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/region/");
+      const response = await axios.get(config.hostname+"/region/");
       if (response.data && response.data.success) {
         setOrgList(response.data.data);
         console.log("Org List:", orgList);
@@ -57,7 +58,7 @@ const RegionManager = ({ callback = () => {} }) => {
         code: updatedRegionCode
       };
       const response = await axios.put(
-        `http://localhost:3002/api/region/${selectedItem._id}`,
+        `${config.hostname}/region/${selectedItem._id}`,
         updatedData
       );
       if (response.data.success) {
@@ -97,7 +98,7 @@ const RegionManager = ({ callback = () => {} }) => {
     if (result.isConfirmed) {
       try {
         const response = await axios.delete(
-          `http://localhost:3002/api/region/${id}`
+          `${config.hostname}/region/${id}`
         );
         if (response.data.success) {
           fetchOrgData();

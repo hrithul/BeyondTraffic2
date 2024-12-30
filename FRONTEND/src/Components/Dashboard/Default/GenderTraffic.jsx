@@ -16,7 +16,7 @@ import {
   startOfYear,
   parseISO
 } from "date-fns";
-
+import config from "../../../config";
 const GenderTraffic = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -116,7 +116,7 @@ const GenderTraffic = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get("http://localhost:3002/api/metrics");
+        const response = await axios.get(config.hostname+"/metrics");
         const metrics = response.data;
         setMetricsData(metrics);
         calculateMetrics(metrics);

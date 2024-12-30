@@ -15,7 +15,7 @@ import { Btn } from "../../../../AbstractElements";
 import { Users } from "react-feather";
 import Swal from "sweetalert2";
 import defaultuser from "../../../../assets/images/user/user.png";
-
+import config from "../../../../config";
 const CreateStore = () => {
   const [modal, setModal] = useState(false);
   const [regionData, setRegionData] = useState([]);
@@ -39,7 +39,7 @@ const CreateStore = () => {
   // Fetch region data from the API
   const fetchRegionData = async () => {
     try {
-      const response = await fetch("http://localhost:3002/api/region");
+      const response = await fetch(config.hostname+"/region");
       const result = await response.json();
       if (response.ok) {
         setRegionData(result.data);
@@ -54,7 +54,7 @@ const CreateStore = () => {
   // Fetch organization data
   const fetchOrganizationId = async () => {
     try {
-      const response = await fetch("http://localhost:3002/api/organization");
+      const response = await fetch(config.hostname+"/organization");
       const result = await response.json();
       if (response.ok && result.data && result.data.length > 0) {
         setOrganizationId(result.data[0]._id);
@@ -113,7 +113,7 @@ const CreateStore = () => {
 
     try {
       // Check if store code already exists
-      const checkResponse = await fetch("http://localhost:3002/api/store");
+      const checkResponse = await fetch(config.hostname+"/store");
       const existingStores = await checkResponse.json();
       
       if (existingStores.data.some(store => store.store_code === data.store_code.toUpperCase())) {
@@ -127,7 +127,7 @@ const CreateStore = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:3002/api/store/create", {
+      const response = await fetch(config.hostname+"/store/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

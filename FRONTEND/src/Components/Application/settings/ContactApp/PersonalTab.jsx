@@ -13,7 +13,7 @@ import {
 import HeaderCard from "../../../Common/Component/HeaderCard";
 import { Btn } from "../../../../AbstractElements";
 import { useForm, Controller } from "react-hook-form";
-
+import config from "../../../../config";
 const PersonalTab = ({ activeTab }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,7 +24,7 @@ const PersonalTab = ({ activeTab }) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3002/api/organization", {
+      const response = await fetch(config.hostname+"/organization", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +70,7 @@ const PersonalTab = ({ activeTab }) => {
     try {
 
       // Check if records exist in the collection
-      const checkResponse = await fetch("http://localhost:3002/api/organization", {
+      const checkResponse = await fetch(config.hostname+"/organization", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +86,7 @@ const PersonalTab = ({ activeTab }) => {
       if (records && records.length === 0) {
         // Create a new record if none exist
         const createResponse = await fetch(
-          "http://localhost:3002/api/organization/create",
+          config.hostname+"/organization/create",
           {
             method: "POST",
             headers: {
@@ -109,7 +109,7 @@ const PersonalTab = ({ activeTab }) => {
 
 
         const updateResponse = await fetch(
-          `http://localhost:3002/api/organization/${records[0]._id}`,
+          `${config.hostname}/organization/${records[0]._id}`,
           {
             method: "PUT",
             headers: {

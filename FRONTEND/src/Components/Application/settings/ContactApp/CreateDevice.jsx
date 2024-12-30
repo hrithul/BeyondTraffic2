@@ -14,7 +14,7 @@ import {
 import { Btn } from "../../../../AbstractElements";
 import { Users } from "react-feather";
 import Swal from "sweetalert2";
-
+import config from "../../../../config"
 const CreateDevice = () => {
   const [modal, setModal] = useState(false);
   const [regionData, setRegionData] = useState([]);
@@ -44,7 +44,7 @@ const CreateDevice = () => {
   // Fetch region data
   const fetchRegionData = async () => {
     try {
-      const response = await fetch("http://localhost:3002/api/region");
+      const response = await fetch(config.hostname+"/region");
       const result = await response.json();
       if (response.ok) {
         setRegionData(result.data);
@@ -59,7 +59,7 @@ const CreateDevice = () => {
   // Fetch store data
   const fetchStoreData = async () => {
     try {
-      const response = await fetch("http://localhost:3002/api/store");
+      const response = await fetch(config.hostname + "/store");
       const result = await response.json();
       if (response.ok) {
         setStoreData(result.data);
@@ -74,7 +74,7 @@ const CreateDevice = () => {
   // Fetch organization data
   const fetchOrganizationId = async () => {
     try {
-      const response = await fetch("http://localhost:3002/api/organization");
+      const response = await fetch(config.hostname+"/organization");
       const result = await response.json();
       if (response.ok && result.data && result.data.length > 0) {
         setOrganizationId(result.data[0]._id);
@@ -160,7 +160,7 @@ const CreateDevice = () => {
 
     try {
       // Check if device ID already exists
-      const checkResponse = await fetch("http://localhost:3002/api/device");
+      const checkResponse = await fetch(config.hostname+"/device");
       const existingDevices = await checkResponse.json();
       
       if (existingDevices.data.some(device => device.device_id === data.device_id)) {
@@ -173,7 +173,7 @@ const CreateDevice = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:3002/api/device/create", {
+      const response = await fetch(config.hostname+"/device/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

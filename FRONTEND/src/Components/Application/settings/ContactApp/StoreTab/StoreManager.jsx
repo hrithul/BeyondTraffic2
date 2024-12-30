@@ -14,6 +14,7 @@ import {
 import { Image, H6, P } from "../../../../../AbstractElements";
 import axios from "axios";
 import Swal from "sweetalert2";
+import config from "../../../../../config";
 
 const StoreManager = ({ callback = () => {} }) => {
   const [orgList, setOrgList] = useState([]);
@@ -33,7 +34,7 @@ const StoreManager = ({ callback = () => {} }) => {
   // Fetch organization and region data
   const fetchOrgData = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/store");
+      const response = await axios.get(config.hostname+"/store");
       if (response.data && response.data.success) {
         setOrgList(response.data.data);
       } else {
@@ -49,7 +50,7 @@ const StoreManager = ({ callback = () => {} }) => {
   // Fetch region data from the backend
   const fetchRegionData = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/region");
+      const response = await axios.get(config.hostname+"/region");
       if (response.data && response.data.success) {
         setRegionList(response.data.data); 
       } else {
@@ -78,7 +79,7 @@ const StoreManager = ({ callback = () => {} }) => {
         region_id: updatedRegionId,
       };
       const response = await axios.put(
-        `http://localhost:3002/api/store/${selectedItem._id}`,
+        `${config.hostname}/store/${selectedItem._id}`,
         updatedData
       );
       if (response.data.success) {
@@ -118,7 +119,7 @@ const StoreManager = ({ callback = () => {} }) => {
     if (result.isConfirmed) {
       try {
         const response = await axios.delete(
-          `http://localhost:3002/api/store/${id}`
+          `${config.hostname}/store/${id}`
         );
         if (response.data.success) {
           fetchOrgData();

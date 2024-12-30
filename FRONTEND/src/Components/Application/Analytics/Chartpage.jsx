@@ -8,6 +8,7 @@ import ChartTypeSelector, { chartTypes } from './ChartTypeSelector';
 import PieDonutChart from './PieDonutChart';
 import { useSelector } from "react-redux";
 import axios from "axios";
+import config from "../../../config"
 
 // Register ChartJS components
 ChartJS.register(
@@ -35,7 +36,7 @@ const defaultChartOptions = {
   plotOptions: {
     bar: {
       horizontal: false,
-      columnWidth: "35%",
+      columnWidth: "30%",
       endingShape: "rounded",
       borderRadius: 2,
     },
@@ -220,7 +221,7 @@ const Chartpage = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get("http://localhost:3002/api/metrics");
+        const response = await axios.get(config.hostname + "/metrics");
         const metrics = Array.isArray(response.data) ? response.data : [response.data];
         setMetricsData(metrics.reduce((acc, metric) => {
           const date = metric?.Metrics?.ReportData?.Report?.["@Date"];
@@ -481,7 +482,7 @@ const Chartpage = () => {
         </CardHeader>
         <CardBody className="pt-0 ">
           <div style={{
-            height: '450px',
+            height: '300px',
             width: '100%',
             position: 'relative'
           }}>

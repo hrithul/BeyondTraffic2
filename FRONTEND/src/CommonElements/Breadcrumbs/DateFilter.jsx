@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDateFilter } from '../../redux/actions/dateFilterActions';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import './DateFilter.css';
 
-const DateFilter = ({ onFilterSelect, initialFilter = 'today' }) => {
+const DateFilter = () => {
+  const dispatch = useDispatch();
+  const selectedFilter = useSelector((state) => state.dateFilter.filter);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState(initialFilter);
   const [showCustomDates, setShowCustomDates] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
@@ -31,20 +34,18 @@ const DateFilter = ({ onFilterSelect, initialFilter = 'today' }) => {
       return;
     }
     
-    setSelectedFilter(filter);
+    dispatch(setDateFilter(filter));
     setShowCustomDates(false);
-    onFilterSelect(filter);
     setIsOpen(false);
   };
 
   const handleCustomDateSubmit = () => {
     if (customStartDate && customEndDate) {
-      setSelectedFilter('custom');
-      onFilterSelect({
+      dispatch(setDateFilter({
         type: 'custom',
         startDate: customStartDate.toISOString().split('T')[0],
         endDate: customEndDate.toISOString().split('T')[0]
-      });
+      }));
       setShowCustomDates(false);
     }
   };
@@ -65,8 +66,8 @@ const DateFilter = ({ onFilterSelect, initialFilter = 'today' }) => {
   }, []);
 
   const getSelectedLabel = () => {
-    if (selectedFilter === 'custom' && customStartDate && customEndDate) {
-      return `${customStartDate.toLocaleDateString()} - ${customEndDate.toLocaleDateString()}`;
+    if (selectedFilter?.type === 'custom' && selectedFilter?.startDate && selectedFilter?.endDate) {
+      return `${new Date(selectedFilter.startDate).toLocaleDateString()} - ${new Date(selectedFilter.endDate).toLocaleDateString()}`;
     }
     
     const filter = dateFilters.find(f => f.value === selectedFilter);

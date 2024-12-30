@@ -12,6 +12,11 @@ const regionRoutes = require('./src/routes/regionRoutes');
 const storeRoutes = require('./src/routes/storeRoutes');
 const deviceRoutes = require('./src/routes/deviceRoutes');
 const metricsRoutes = require('./src/routes/metricsRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
+const cron = require("node-cron");
+const fetchJsonFromFTP = require("./src/services/ftpService");
+const saveToMongo = require("./src/utils/saveToMongo");
+const bodyParser = require("body-parser");
 
 app.use(cors());
 
@@ -20,6 +25,7 @@ app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 const Mongo_URI = process.env.DB_CONNECTION;
 // Database connection
@@ -28,6 +34,9 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Could not connect to MongoDB", err));
 
+
+fetchJsonFromFTP(saveToMongo);
+
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/organization', organizationRoutes);
@@ -35,14 +44,13 @@ app.use('/api/region', regionRoutes);
 app.use('/api/store', storeRoutes);
 app.use('/api/device', deviceRoutes);
 app.use('/api/metrics', metricsRoutes);
-
+app.use('/api/reports', reportRoutes);
 
 // Basic error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
 });
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
