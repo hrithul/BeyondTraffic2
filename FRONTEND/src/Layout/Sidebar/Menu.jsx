@@ -16,7 +16,7 @@ export const MENUITEMS = [
         type: "link",
       },
       {
-        path: `${process.env.PUBLIC_URL}/app/reports`,
+        path: `${process.env.PUBLIC_URL}/app/report`,
         icon: "task",
         title: "Reports",
         type: "link",

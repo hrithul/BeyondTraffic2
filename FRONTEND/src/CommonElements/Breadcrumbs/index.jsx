@@ -32,10 +32,10 @@ const Breadcrumbs = (props) => {
             </Col>
             <Col xs="6">
               <div className="d-flex align-items-center justify-content-end">
-                <DateFilter onFilterSelect={handleDateFilterChange} />
+                {(props.title==='Analytics'||props.title==='Default') && <DateFilter onFilterSelect={handleDateFilterChange} />}
                 <ol className="breadcrumb">
                   <li>
-                    <DeviceFilter onFilterSelect={handleDeviceFilterSelect} />
+                   {(props.title==='Analytics'||props.title==='Default') && <DeviceFilter onFilterSelect={handleDeviceFilterSelect} />}
                   </li>
                   <li className="breadcrumb-item">
                     <Link to={`${process.env.PUBLIC_URL}/dashboard/default/${layoutURL}`}>

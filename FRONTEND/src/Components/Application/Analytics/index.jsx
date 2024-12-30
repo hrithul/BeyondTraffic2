@@ -13,9 +13,9 @@ const Analytics = () => {
 
     return (
       <Fragment>
-        <Breadcrumbs mainTitle="Traffic" parent="Dashboard" title="Default" />
-        <Container fluid={true}>
-          <Row className="widget-grid">
+        <Breadcrumbs mainTitle="Traffic" parent="App" title="Analytics" />
+        <Container fluid={true} >
+          <Row className="widget-grid" style={{ minHeight: "73vh" }}>
             <Chartpage />
           </Row>
         </Container>

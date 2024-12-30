@@ -98,8 +98,12 @@ import VideoChat from "../Components/Application/Chat/VideoChat";
 import Contact from "../Components/Application/settings/ContactApp";
 import Task from "../Components/Application/Task";
 import TodoContain from "../Components/Application/Todo";
-// //Analytics
+// Analytics
 import Analytics from "../Components/Application/Analytics";
+// Report
+import Report from "../Components/Application/Report";
+// Pos
+import Pos from "../Components/Application/Pos";
 
 // //Gallary
 import ImageGallery from "../Components/Gallery/ImageGallery";
@@ -280,6 +284,8 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/app/chat-app/chat-video-app/:layout`, Component: <VideoChat /> },
   { path: `${process.env.PUBLIC_URL}/app/settings/:layout`, Component: <Contact /> },
   { path: `${process.env.PUBLIC_URL}/app/analytics/:layout`, Component: <Analytics /> },
+  { path: `${process.env.PUBLIC_URL}/app/report/:layout`, Component: <Report/> },
+  { path: `${process.env.PUBLIC_URL}/app/pos/:layout`, Component: <Pos /> },
 
   { path: `${process.env.PUBLIC_URL}/app/task/:layout`, Component: <Task /> },
   { path: `${process.env.PUBLIC_URL}/app/bookmark/:layout`, Component: <BookmarksContain /> },

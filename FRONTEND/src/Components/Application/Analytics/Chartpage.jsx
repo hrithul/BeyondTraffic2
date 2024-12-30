@@ -8,18 +8,6 @@ import ChartTypeSelector, { chartTypes } from './ChartTypeSelector';
 import PieDonutChart from './PieDonutChart';
 import { useSelector } from "react-redux";
 import axios from "axios";
-import {
-  format,
-  subDays,
-  startOfMonth,
-  startOfWeek,
-  endOfMonth,
-  endOfWeek,
-  subMonths,
-  subWeeks,
-  startOfYear,
-  parseISO,
-} from "date-fns";
 
 // Register ChartJS components
 ChartJS.register(
@@ -273,16 +261,16 @@ const Chartpage = () => {
   };
 
   const metricColors = {
-    enters: "rgba(90, 200, 90, 0.90)", // Green for entries
-    exits: "rgba(255, 0, 0, 0.90)", // Red for exits
-    totalTraffic: "rgba(90, 110, 250, 0.90)", // Blue for total traffic
+    enters: "rgba(90, 200, 90, 0.90)", 
+    exits: "rgba(255, 0, 0, 0.90)", 
+    totalTraffic: "rgba(90, 110, 250, 0.90)", 
 
-    entersMale: "rgba(30, 144, 255, 0.70)", // Light green for male entries
-    exitsMale: "rgba(0, 0, 139, 0.70)", // Light red for male exits
-    entersFemale: "rgba(255, 105, 180, 0.70)", // Softer green for female entries
-    exitsFemale: "rgba(139, 0, 139, 0.70)", // Softer red for female exits
-    unknownEnters: "rgba(0, 128, 0, 0.50)", // Pale green for unknown entries
-    unknownExits: "rgba(255, 0, 0, 0.50)", // Pale red for unknown exits
+    entersMale: "rgba(30, 144, 255, 0.70)",
+    exitsMale: "rgba(0, 0, 139, 0.70)", 
+    entersFemale: "rgba(255, 105, 180, 0.70)",
+    exitsFemale: "rgba(139, 0, 139, 0.70)", 
+    unknownEnters: "rgba(0, 128, 0, 0.50)",
+    unknownExits: "rgba(255, 0, 0, 0.50)", 
   };
 
   const calculateMetrics = (metrics = {}) => {
@@ -471,7 +459,6 @@ const Chartpage = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (
@@ -492,9 +479,9 @@ const Chartpage = () => {
             </div>
           </div>
         </CardHeader>
-        <CardBody className="pt-0">
+        <CardBody className="pt-0 ">
           <div style={{
-            height: '400px',
+            height: '450px',
             width: '100%',
             position: 'relative'
           }}>
