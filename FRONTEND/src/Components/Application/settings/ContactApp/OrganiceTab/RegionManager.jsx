@@ -33,7 +33,6 @@ const RegionManager = ({ callback = () => {} }) => {
       const response = await axios.get(config.hostname+"/region/");
       if (response.data && response.data.success) {
         setOrgList(response.data.data);
-        console.log("Org List:", orgList);
       } else {
         throw new Error("Failed to fetch store data");
       }

@@ -6,7 +6,6 @@ const userController = require('../controllers/userController');
 const validateToken = (req, res, next) => {
     // Extract the token from the request's authorization header
     const authHeader = req.headers['authorization'];
-
     const token = authHeader;
     console.log(token);
     if (token == null) {
@@ -23,7 +22,7 @@ const validateToken = (req, res, next) => {
 };
 
 //route to create user
-router.post('/createuser', userController.createUser,(req,res)=>{
+router.post('/create', validateToken, userController.createUser,(req,res)=>{
     console.log(req.body);
 });
 

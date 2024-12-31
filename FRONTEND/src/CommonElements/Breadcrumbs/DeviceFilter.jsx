@@ -4,6 +4,7 @@ import axios from "axios";
 import "./DeviceFilter.css";
 import { useDispatch, useSelector } from 'react-redux';
 import { setDeviceFilter, clearDeviceFilter } from '../../redux/actions/deviceFilterActions';
+import config from '../../config';
 
 // Reusable CheckboxList component
 const CheckboxList = ({ items, selectedItems, onItemSelect, getLabel, onItemClick, activeItem, className }) => (
@@ -101,8 +102,8 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
     try {
       setLoading(true);
       const [orgResponse, regionsResponse] = await Promise.all([
-        axios.get("http://127.0.0.1:3002/api/organization"),
-        axios.get("http://127.0.0.1:3002/api/region")
+        axios.get(config.hostname+"/organization"),
+        axios.get(config.hostname+"/region")
       ]);
 
       const organizations = orgResponse.data.data;
@@ -135,8 +136,8 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
       }
 
       const [regionResponse, storeResponse] = await Promise.all([
-        axios.get("http://127.0.0.1:3002/api/region"),
-        axios.get("http://127.0.0.1:3002/api/store")
+        axios.get(config.hostname+"/region"),
+        axios.get(config.hostname+"/store")
       ]);
 
       const regions = regionResponse.data.data;
@@ -169,12 +170,12 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
       }
 
       const storeResponse = await axios.get(
-        `http://127.0.0.1:3002/api/store?region_id=${regionId}`
+        `${config.hostname}/store?region_id=${regionId}`
       );
       const stores = storeResponse.data.data;
 
       const deviceResponse = await axios.get(
-        "http://127.0.0.1:3002/api/device"
+        `${config.hostname}/device`
       );
       const devices = deviceResponse.data.data;
 
@@ -203,7 +204,7 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://127.0.0.1:3002/api/device?store_code=${storeCode}`
+        `${config.hostname}/device?store_code=${storeCode}`
       );
       return response.data.data.map((device) => ({
         name: device.device_name,

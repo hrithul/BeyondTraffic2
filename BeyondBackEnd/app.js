@@ -18,7 +18,8 @@ const fetchJsonFromFTP = require("./src/services/ftpService");
 const saveToMongo = require("./src/utils/saveToMongo");
 const bodyParser = require("body-parser");
 
-app.use(cors());
+app.use(cors({ origin: "*" }));
+app.options("*", cors());
 
 // parse requests of content-type - application/json
 app.use(express.json());

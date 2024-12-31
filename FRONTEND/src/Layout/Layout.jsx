@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useRef } from "react";
 import { ToastContainer } from "react-toastify";
 import { useContext } from "react";
 import { Outlet, useLocation } from "react-router-dom";
@@ -13,6 +13,7 @@ import CustomizerContext from "../_helper/Customizer";
 import AnimationThemeContext from "../_helper/AnimationTheme";
 import ConfigDB from "../Config/ThemeConfig";
 import Loader from "./Loader";
+
 const AppLayout = ({ children, classNames, ...rest }) => {
   const { layout } = useContext(CustomizerContext);
   const { sidebarIconType } = useContext(CustomizerContext);
@@ -23,6 +24,8 @@ const AppLayout = ({ children, classNames, ...rest }) => {
   const { animation } = useContext(AnimationThemeContext);
   const animationTheme = localStorage.getItem("animation") || animation || ConfigDB.data.router_animation;
 
+  const nodeRef = useRef(null);
+
   return (
     <Fragment>
       <Loader />
@@ -32,8 +35,14 @@ const AppLayout = ({ children, classNames, ...rest }) => {
         <div className="page-body-wrapper">
           <Sidebar />
           <TransitionGroup {...rest}>
-            <CSSTransition key={location.key} timeout={100} classNames={animationTheme} unmountOnExit>
-              <div className="page-body">
+            <CSSTransition 
+              nodeRef={nodeRef}
+              key={location.key} 
+              timeout={100} 
+              classNames={animationTheme} 
+              unmountOnExit
+            >
+              <div ref={nodeRef} className="page-body">
                 <div>
                   <div>
                     <Outlet />

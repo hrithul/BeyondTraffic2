@@ -1,6 +1,6 @@
 import React from "react";
 import { Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, createBrowserRouter } from "react-router-dom";
 import Loader from "../Layout/Loader";
 import { authRoutes } from "./AuthRoutes";
 import LayoutRoutes from "../Route/LayoutRoutes";
@@ -29,22 +29,23 @@ const Routers = () => {
   }, []);
 
   return (
-    <BrowserRouter basename={"/"}>
+    <BrowserRouter basename={"/"} future={{ 
+      v7_relativeSplatPath: true,
+      v7_startTransition: true 
+    }}>
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path={"/"} element={<PrivateRoute />}>
             {login || authenticated ? (
               <>
-                <Route exact path={`${process.env.PUBLIC_URL}`} element={<Navigate to={`${process.env.PUBLIC_URL}/dashboard/default/${layout}`} />} />
-                <Route exact path={`/`} element={<Navigate to={`${process.env.PUBLIC_URL}/dashboard/default/${layout}`} />} />
+                <Route index element={<Navigate to={`${process.env.PUBLIC_URL}/dashboard/default/${layout}`} />} />
+                <Route path={`${process.env.PUBLIC_URL}`} element={<Navigate to={`${process.env.PUBLIC_URL}/dashboard/default/${layout}`} />} />
               </>
-            ) : (
-              ""
-            )}
+            ) : null}
             <Route path={`/*`} element={<LayoutRoutes />} />
           </Route>
 
-          <Route exact path={`${process.env.PUBLIC_URL}/login`} element={<Signin />} />
+          <Route path={`${process.env.PUBLIC_URL}/login`} element={<Signin />} />
           {authRoutes.map(({ path, Component }, i) => (
             <Route path={path} element={Component} key={i} />
           ))}

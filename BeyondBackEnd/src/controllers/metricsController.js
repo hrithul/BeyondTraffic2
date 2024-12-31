@@ -1,4 +1,5 @@
 const Metrics = require("../models/Metrics");
+const jwt = require('jsonwebtoken');
 
 // Get all metrics
 const getAllMetrics = async (req, res) => {

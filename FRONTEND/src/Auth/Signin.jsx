@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import man from "../assets/images/dashboard/profile.png";
 
 import CustomizerContext from "../_helper/Customizer";
-import OtherWay from "./OtherWay";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import config from "../config";
@@ -65,7 +64,7 @@ const Signin = ({ selected }) => {
             <div className="login-card">
               <div className="login-main login-tab">
                 <Form className="theme-form">
-                  <H4>{selected === "simpleLogin" ? "" : "Sign In With Simple Login"}</H4>
+                  <H4>{selected === "simpleLogin" ? "" : "BeyondTraffic"}</H4>
                   <P>{"Enter your email & password to login"}</P>
                   <FormGroup>
                     <Label className="col-form-label">{EmailAddress}</Label>
@@ -92,7 +91,6 @@ const Signin = ({ selected }) => {
                     </a>
                     <Btn attrBtn={{ color: "primary", className: "d-block w-100 mt-2", onClick: (e) => loginAuth(e) }}>{SignIn}</Btn>
                   </div>
-                  <OtherWay />
                 </Form>
               </div>
             </div>

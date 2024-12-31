@@ -46,7 +46,6 @@ const DeviceManager = ({ callback = () => {} }) => {
   // Handle region selection change
   const handleRegionChange = (e) => {
     const regionCode = e.target.value;
-    console.log("Selected Region Code:", regionCode);
     
     // Find the region object
     const selectedRegionObj = regionList.find(region => region.code === regionCode);
@@ -60,17 +59,14 @@ const DeviceManager = ({ callback = () => {} }) => {
     
     // Filter stores based on selected region's code
     if (regionCode) {
-      console.log("Filtering stores for region:", regionCode);
       const storesInRegion = storeList.filter(store => {
-        console.log("Store:", store);
         return store.region_id === regionCode;
       });
-      console.log("Filtered Stores:", storesInRegion);
       setFilteredStores(storesInRegion);
       
       if (storesInRegion.length === 0) {
         Swal.fire({
-          icon: "info",
+          icon: "info", 
           title: "No Stores Found",
           text: "No stores available in the selected region",
           timer: 2000,

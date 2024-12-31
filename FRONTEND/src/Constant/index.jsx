@@ -6,7 +6,7 @@ export const Appointment = "Appointment";
 export const Notification = "Notification";
 export const MarketValue = "Market Value";
 export const Chat = "Chat";
-export const GeoJsonMaps = "GeoJsonMaps";
+// export const GeoJsonMaps = "GeoJsonMaps";
 export const DraggableMarkers = "DraggableMarkers";
 
 export const NewProduct = "New Product";
@@ -796,7 +796,7 @@ export const SectionAndSeparator = "Section and Separator";
 export const Layouts = "Layout";
 export const Sidebars = "Sidebar";
 export const Charts = "Charts";
-export const Maps = "Maps";
+// export const Maps = "Maps";
 export const Audios = "Audios";
 export const Editors = "Editors";
 export const TreeView = "TreeView";

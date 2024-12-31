@@ -20,7 +20,7 @@ const ActiveNav = () => {
                             <LI><a href="#javascript"><CreditCard /><span> Cards</span></a></LI>
                             <LI><a className="disabled" href="#javascript"><Sliders /><span> Timeline</span></a></LI>
                             <LI><a href="#javascript"><BarChart /><span> Charts</span></a></LI>
-                            <LI><a href="#javascript"><Map /><span> Maps</span></a></LI>
+                            {/* <LI><a href="#javascript"><Map /><span> Maps</span></a></LI> */}
                             <LI><a href="#javascript"><GitPullRequest /><span> Editors</span></a></LI>
                         </UL>
                         <div className="onhover-dropdown navs-dropdown">
@@ -35,7 +35,7 @@ const ActiveNav = () => {
                                     <LI><a href="#javascript"><CreditCard /><span> Cards</span></a></LI>
                                     <LI><a className="disabled" href="#javascript"><Sliders /><span> Timeline</span></a></LI>
                                     <LI><a href="#javascript"><BarChart /><span> Charts</span></a></LI>
-                                    <LI><a href="#javascript"><Map /><span> Maps</span></a></LI>
+                                    {/* <LI><a href="#javascript"><Map /><span> Maps</span></a></LI> */}
                                     <LI><a href="#javascript"><GitPullRequest /><span> Editors</span></a></LI>
                                 </UL>
                             </div>

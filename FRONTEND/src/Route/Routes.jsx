@@ -168,8 +168,8 @@ import LearningList from "../Components/Learning/LearningList";
 import DetailCourse from "../Components/Learning/DetailCourse";
 
 // //Map
-import GoogleMaps from "../Components/Map/GoogleMap";
-import PigeonMap from "../Components/Map/Pigeon Map";
+// import GoogleMaps from "../Components/Map/GoogleMap";
+// import PigeonMap from "../Components/Map/Pigeon Map";
 
 // //Editor
 import CkEditorContain from "../Components/Editor/CkEditor";
@@ -337,8 +337,8 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/app/learning/learningdetail/:layout`, Component: <DetailCourse /> },
 
   // //Map
-  { path: `${process.env.PUBLIC_URL}/app/map/googlemap/:layout`, Component: <GoogleMaps /> },
-  { path: `${process.env.PUBLIC_URL}/app/map/pigeonmap/:layout`, Component: <PigeonMap /> },
+  // { path: `${process.env.PUBLIC_URL}/app/map/googlemap/:layout`, Component: <GoogleMaps /> },
+  // { path: `${process.env.PUBLIC_URL}/app/map/pigeonmap/:layout`, Component: <PigeonMap /> },
 
   // //Editor
   { path: `${process.env.PUBLIC_URL}/editor/ckeditor/:layout`, Component: <CkEditorContain /> },

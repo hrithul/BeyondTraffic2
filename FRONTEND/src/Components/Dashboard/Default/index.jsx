@@ -1,13 +1,21 @@
-import React, { Fragment } from "react";
+import React, { Fragment, Suspense, lazy } from "react";
 import { Container, Row } from "reactstrap";
 import { Breadcrumbs } from "../../../AbstractElements";
-
-import GenderTraffic from "./GenderTraffic";
 import GreetingCard from "./GreetingCard";
 import WidgetsWrapper from "./WidgetsWraper";
-import TrafficbyMonth from"./HourTraffic";
-import DayTraffic from "./DayTraffic";
-import MonthlyTraffic from "./MonthlyTraffic";
+
+// Lazy load the traffic components
+const GenderTraffic = lazy(() => import("./GenderTraffic"));
+const TrafficbyMonth = lazy(() => import("./HourTraffic"));
+const DayTraffic = lazy(() => import("./DayTraffic"));
+const MonthlyTraffic = lazy(() => import("./MonthlyTraffic"));
+
+// Loading placeholder
+const LoadingPlaceholder = () => (
+  <div className="chart-loader">
+    <div className="loading-spinner"></div>
+  </div>
+);
 
 const Dashboard = () => {
   return (
@@ -17,10 +25,18 @@ const Dashboard = () => {
         <Row className="widget-grid">
           <GreetingCard />
           <WidgetsWrapper />
-          <GenderTraffic />
-          <TrafficbyMonth/>
-          <DayTraffic/>
-          <MonthlyTraffic/>
+          <Suspense fallback={<LoadingPlaceholder />}>
+            <GenderTraffic />
+          </Suspense>
+            <Suspense fallback={<LoadingPlaceholder />}>
+              <TrafficbyMonth />
+            </Suspense>
+            <Suspense fallback={<LoadingPlaceholder />}>
+              <DayTraffic />
+            </Suspense>
+            <Suspense fallback={<LoadingPlaceholder />}>
+              <MonthlyTraffic />
+            </Suspense>
         </Row>
       </Container>
     </Fragment>

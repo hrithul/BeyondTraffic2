@@ -283,8 +283,6 @@ const Chartpage = () => {
       return;
     }
 
-    console.log("Calculating metrics for chart type:", chartType);
-    console.log("Selected metrics:", selectedMetrics);
 
     const categories = [];
     const seriesData = {};
@@ -371,7 +369,6 @@ const Chartpage = () => {
         }]
       };
 
-      console.log("Setting pie/donut chart data:", chartData);
       setChartData(chartData);
     } else {
       // For other charts
@@ -394,7 +391,6 @@ const Chartpage = () => {
         datasets
       };
 
-      console.log("Setting regular chart data:", chartData);
       setChartData(chartData);
     }
   };

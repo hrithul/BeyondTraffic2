@@ -1,4 +1,5 @@
 const Organization = require('../models/organization');
+const jwt = require('jsonwebtoken');
 
 // Create a new organization
 exports.createOrganization = async (req, res) => {
@@ -33,8 +34,7 @@ exports.getAllOrganizations = async (req, res) => {
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
-  };
-
+};
 
 // Update an organization by ID
 exports.updateOrganizationById = async (req, res) => {
@@ -51,4 +51,4 @@ exports.updateOrganizationById = async (req, res) => {
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });
     }
-  };
+};

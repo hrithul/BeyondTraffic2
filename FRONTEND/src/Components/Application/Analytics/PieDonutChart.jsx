@@ -59,14 +59,14 @@ const PieDonutChart = ({ chartData, isDonutChart }) => {
       }]
     };
     return (
-      <div style={{ height: '350px', position: 'relative' }}>
+      <div style={{ height: '300px', position: 'relative' }}>
         <Pie data={emptyData} options={options} />
       </div>
     );
   }
 
   return (
-    <div style={{ height: '350px', position: 'relative' }}>
+    <div style={{ height: '300px', position: 'relative' }}>
       <Pie data={chartData} options={options} />
     </div>
   );
