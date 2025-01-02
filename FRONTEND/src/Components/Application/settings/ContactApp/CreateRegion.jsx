@@ -6,10 +6,12 @@ import { Users } from 'react-feather';
 import { Row, Col, Modal, ModalHeader, ModalBody, Label, Input, FormGroup, Form } from 'reactstrap';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
+import axios from "../../../../utils/axios";
 import config from "../../../../config";
 
 const CreateContact = () => {
   const [modal, setModal] = useState(false);
+  const [error, setError] = useState(null);
   
   const toggle = () => {
     setModal(!modal);
@@ -32,34 +34,26 @@ const CreateContact = () => {
 
   const AddContact = async (data) => {
     try {
-      const checkResponse = await fetch(config.hostname+'/region');
-      const existingRegions = await checkResponse.json();
+      // Check if region code already exists
+      const checkResponse = await axios.get(`/region`);
+      const existingRegions = checkResponse.data.data;
       
-      if (existingRegions.data.some(region => region.code === data.code.toUpperCase())) {
+      if (existingRegions.some(region => region.code === data.code.toUpperCase())) {
         Swal.fire({
           icon: 'error',
           title: 'Validation Error',
           text: 'Region code already exists',
           confirmButtonText: 'OK',
-          confirmButtonColor: '#3085d6'
         });
         return;
       }
 
-      const response = await fetch(config.hostname+'/region/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: data.code.toUpperCase(),
-          name: data.name.trim(),
-        }),
+      const response = await axios.post(`/region/create`, {
+        code: data.code.toUpperCase(),
+        name: data.name.trim(),
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
+      if (response.data && response.data.success) {
         Swal.fire({
           icon: 'success',
           title: 'Success!',
@@ -72,17 +66,14 @@ const CreateContact = () => {
         setModal(false);
         reset();
       } else {
-        throw new Error(result.message || 'Error creating region');
+        throw new Error(response.data.message || 'Error creating region');
       }
     } catch (error) {
-      console.error('Error:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Creation Failed',
-        text: error.message || 'Failed to create region',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#3085d6'
-      });
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to create region");
+      }
     }
   };
 
@@ -143,6 +134,9 @@ const CreateContact = () => {
             <Btn attrBtn={{ color: 'secondary', className: 'me-2' }} type='submit'>{Save}</Btn>
             <Btn attrBtn={{ color: 'primary', onClick: toggle }}>{Cancel}</Btn>
           </Form>
+          {error && (
+            <div className='alert alert-danger mt-3'>{error}</div>
+          )}
         </ModalBody>
       </Modal>
     </Fragment>

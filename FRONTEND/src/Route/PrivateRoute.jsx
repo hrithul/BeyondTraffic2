@@ -2,17 +2,38 @@ import React, { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 const PrivateRoute = () => {
-  const [login, setLogin] = useState(JSON.parse(localStorage.getItem("islogin")));
-  const [authenticated, setAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setAuthenticated(JSON.parse(localStorage.getItem("authenticated")));
-    localStorage.setItem("authenticated", authenticated);
-    localStorage.setItem("login", login);
-    console.log("login", login);
-    console.log("authenticated", authenticated);
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      const isLogin = localStorage.getItem('islogin') === 'true';
+      const authenticated = localStorage.getItem('authenticated') === 'true';
+      
+      const isAuth = Boolean(token && (isLogin || authenticated));
+      console.log('Auth Check:', {
+        hasToken: !!token,
+        isLogin,
+        authenticated,
+        isAuthenticated: isAuth
+      });
+      
+      setIsAuthenticated(isAuth);
+      setIsLoading(false);
+    };
+
+    checkAuth();
+    // Add event listener for storage changes
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
   }, []);
-  return login || authenticated ? <Outlet /> : <Navigate exact to={`${process.env.PUBLIC_URL}/login`} />;
+
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
+
+  return isAuthenticated ? <Outlet /> : <Navigate to={`${process.env.PUBLIC_URL}/login`} />;
 };
 
 export default PrivateRoute;

@@ -1,4 +1,5 @@
 const Device = require("../models/device");
+const { getLatestMetrics } = require("./metricsController");
 
 // Create a new store
 exports.createDevice = async (req, res) => {
@@ -72,6 +73,32 @@ exports.deleteDeviceById = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Device deleted successfully" });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get the last sync date-time for devices
+exports.getLastSyncDateTime = async (req, res) => {
+  try {
+    // Fetch all devices
+    const devices = await Device.find();
+
+    if (!devices.length) {
+      return res.status(404).json({ success: false, message: "No devices found" });
+    }
+
+    // Extract device IDs
+    const deviceIds = devices.map(device => device.device_id);
+
+    // Fetch the latest metrics for each device
+    const metricsData = await getLatestMetrics(deviceIds);
+
+    console.log(metricsData);
+
+    // Send the response
+    res.status(200).json({ success: true, data: metricsData });
+  } catch (error) {
+    console.error("Error fetching device sync data:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };

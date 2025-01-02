@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardBody, Row, Col } from "reactstrap";
-import axios from "axios";
+import axios from "../../utils/axios";
 import "./DeviceFilter.css";
 import { useDispatch, useSelector } from 'react-redux';
 import { setDeviceFilter, clearDeviceFilter } from '../../redux/actions/deviceFilterActions';
@@ -102,8 +102,8 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
     try {
       setLoading(true);
       const [orgResponse, regionsResponse] = await Promise.all([
-        axios.get(config.hostname+"/organization"),
-        axios.get(config.hostname+"/region")
+        axios.get("/organization"),
+        axios.get("/region")
       ]);
 
       const organizations = orgResponse.data.data;
@@ -136,8 +136,8 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
       }
 
       const [regionResponse, storeResponse] = await Promise.all([
-        axios.get(config.hostname+"/region"),
-        axios.get(config.hostname+"/store")
+        axios.get("/region"),
+        axios.get("/store")
       ]);
 
       const regions = regionResponse.data.data;
@@ -170,12 +170,12 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
       }
 
       const storeResponse = await axios.get(
-        `${config.hostname}/store?region_id=${regionId}`
+        `/store?region_id=${regionId}`
       );
       const stores = storeResponse.data.data;
 
       const deviceResponse = await axios.get(
-        `${config.hostname}/device`
+        `/device`
       );
       const devices = deviceResponse.data.data;
 
@@ -204,7 +204,7 @@ const DeviceFilter = ({ onFilterSelect, initialFilter = 'default' }) => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${config.hostname}/device?store_code=${storeCode}`
+        `/device?store_code=${storeCode}`
       );
       return response.data.data.map((device) => ({
         name: device.device_name,

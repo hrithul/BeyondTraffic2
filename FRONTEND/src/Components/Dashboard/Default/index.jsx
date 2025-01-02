@@ -3,6 +3,7 @@ import { Container, Row } from "reactstrap";
 import { Breadcrumbs } from "../../../AbstractElements";
 import GreetingCard from "./GreetingCard";
 import WidgetsWrapper from "./WidgetsWraper";
+import DeviceStatus from "./DeviceStatus";
 
 // Lazy load the traffic components
 const GenderTraffic = lazy(() => import("./GenderTraffic"));
@@ -37,6 +38,7 @@ const Dashboard = () => {
             <Suspense fallback={<LoadingPlaceholder />}>
               <MonthlyTraffic />
             </Suspense>
+            <DeviceStatus />
         </Row>
       </Container>
     </Fragment>

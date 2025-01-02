@@ -3,6 +3,7 @@
   background: #fff;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
 }
 
 .locations-title {
@@ -83,4 +84,46 @@
   padding: 10px;
   color: #666;
   font-style: italic;
+}
+
+.location-selector .basic-multi-select {
+  margin-bottom: 1rem;
+}
+
+.location-selector .select__control {
+  border-radius: 4px;
+  min-height: 38px;
+}
+
+.location-selector .select__control--is-focused {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.location-selector .select__menu {
+  z-index: 1000;
+}
+
+.location-selector .select__option--is-selected {
+  background-color: #007bff;
+}
+
+.location-selector .select__option--is-focused {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.location-selector .select__multi-value {
+  background-color: #e9ecef;
+  border-radius: 4px;
+}
+
+.location-selector .select__multi-value__remove:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.location-selector .alert {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
 }

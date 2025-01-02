@@ -14,7 +14,9 @@ import {
 import { Btn } from "../../../../AbstractElements";
 import { Users } from "react-feather";
 import Swal from "sweetalert2";
-import config from "../../../../config"
+import axios from "../../../../utils/axios";
+import config from "../../../../config";
+
 const CreateDevice = () => {
   const [modal, setModal] = useState(false);
   const [regionData, setRegionData] = useState([]);
@@ -24,6 +26,7 @@ const CreateDevice = () => {
   const [organizationId, setOrganizationId] = useState("");
   const [active, setActive] = useState("true");
   const [filteredStores, setFilteredStores] = useState([]);
+  const [error, setError] = useState(null);
 
   const {
     register,
@@ -44,45 +47,58 @@ const CreateDevice = () => {
   // Fetch region data
   const fetchRegionData = async () => {
     try {
-      const response = await fetch(config.hostname+"/region");
-      const result = await response.json();
-      if (response.ok) {
-        setRegionData(result.data);
+      const response = await axios.get(`/region`);
+      if (response.data && response.data.success) {
+        setRegionData(response.data.data);
       } else {
-        console.error("Failed to fetch region data:", result.message);
+        throw new Error("Failed to fetch region data");
       }
     } catch (error) {
-      console.error("Error fetching region data:", error);
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch region data");
+      }
     }
   };
 
   // Fetch store data
   const fetchStoreData = async () => {
     try {
-      const response = await fetch(config.hostname + "/store");
-      const result = await response.json();
-      if (response.ok) {
-        setStoreData(result.data);
+      const response = await axios.get(`/store`);
+      if (response.data && response.data.success) {
+        setStoreData(response.data.data);
       } else {
-        console.error("Failed to fetch store data:", result.message);
+        throw new Error("Failed to fetch store data");
       }
     } catch (error) {
-      console.error("Error fetching store data:", error);
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch store data");
+      }
     }
   };
 
   // Fetch organization data
   const fetchOrganizationId = async () => {
     try {
-      const response = await fetch(config.hostname+"/organization");
-      const result = await response.json();
-      if (response.ok && result.data && result.data.length > 0) {
-        setOrganizationId(result.data[0]._id);
+      const response = await axios.get(`/organization`);
+      if (response.data && response.data.success) {
+        if (response.data.data && response.data.data.length > 0) {
+          setOrganizationId(response.data.data[0]._id);
+        } else {
+          throw new Error("No organization data found");
+        }
       } else {
-        console.error("Failed to fetch organization data:", result.message);
+        throw new Error("Failed to fetch organization data");
       }
     } catch (error) {
-      console.error("Error fetching organization data:", error);
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch organization data");
+      }
     }
   };
 
@@ -148,22 +164,12 @@ const CreateDevice = () => {
 
   // Function to handle API call for creating a device
   const AddDevice = async (data) => {
-    if (!selectedRegion || !selectedStore) {
-      Swal.fire({
-        icon: "warning",
-        title: "Required Fields",
-        text: "Please select both Region and Store before creating the device",
-        confirmButtonText: "OK",
-      });
-      return;
-    }
-
     try {
       // Check if device ID already exists
-      const checkResponse = await fetch(config.hostname+"/device");
-      const existingDevices = await checkResponse.json();
+      const checkResponse = await axios.get(`/device`);
+      const existingDevices = checkResponse.data.data;
       
-      if (existingDevices.data.some(device => device.device_id === data.device_id)) {
+      if (existingDevices.some(device => device.device_id === data.device_id)) {
         Swal.fire({
           icon: "error",
           title: "Validation Error",
@@ -173,26 +179,19 @@ const CreateDevice = () => {
         return;
       }
 
-      const response = await fetch(config.hostname+"/device/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          organization_id: organizationId,
-          region_id: selectedRegion,
-          store_code: selectedStore,
-          device_id: data.device_id,
-          device_name: data.device_name,
-          mac_address: data.mac_address,
-          ip_address: data.ip_address,
-          serial_number: data.serial_number,
-          active: active,
-        }),
+      const response = await axios.post(`/device/create`, {
+        organization_id: organizationId,
+        region_id: selectedRegion,
+        store_code: selectedStore,
+        device_id: data.device_id,
+        device_name: data.device_name,
+        mac_address: data.mac_address,
+        ip_address: data.ip_address,
+        serial_number: data.serial_number,
+        active: active,
       });
 
-      const result = await response.json();
-      if (response.ok) {
+      if (response.data && response.data.success) {
         Swal.fire({
           icon: "success",
           title: "Success!",
@@ -205,17 +204,14 @@ const CreateDevice = () => {
         setModal(false);
         reset();
       } else {
-        throw new Error(result.message || "Error creating device");
+        throw new Error(response.data.message || "Error creating device");
       }
     } catch (error) {
-      console.error("Error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Creation Failed",
-        text: error.message || "Failed to create device",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#3085d6",
-      });
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to create device");
+      }
     }
   };
 
@@ -403,6 +399,11 @@ const CreateDevice = () => {
             </Btn>
             <Btn attrBtn={{ color: "primary", onClick: toggle }}>Cancel</Btn>
           </Form>
+          {error && (
+            <div className="alert alert-danger mt-3">
+              {error}
+            </div>
+          )}
         </ModalBody>
       </Modal>
     </Fragment>

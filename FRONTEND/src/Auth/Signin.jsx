@@ -8,7 +8,7 @@ import man from "../assets/images/dashboard/profile.png";
 
 import CustomizerContext from "../_helper/Customizer";
 import { ToastContainer, toast } from "react-toastify";
-import axios from "axios";
+import axios from '../utils/axios';
 import config from "../config";
 
 const Signin = ({ selected }) => {
@@ -34,26 +34,27 @@ const Signin = ({ selected }) => {
       password: password,
     };
 
-    axios.post(`${config.hostname}/auth/login`, data)
-      .then(response => {
-        
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('loginUser', response.data.first_name);
-        localStorage.setItem('loginUserId', response.data.user_id);
-        localStorage.setItem('islogin', true);
+    try {
+      console.log('Attempting login with:', { username: userName });
+      const response = await axios.post(`${config.hostname}/auth/login`, data);
+      console.log('Login response:', response.data);
+      
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('loginUser', response.data.first_name);
+      localStorage.setItem('loginUserId', response.data.user_id);
+      localStorage.setItem('islogin', 'true');
+      localStorage.setItem('authenticated', 'true');
+      localStorage.setItem('profileURL', man);
+      localStorage.setItem('Name', response.data.first_name);
 
-        //console.log(JSON.parse(localStorage.getItem("token")));
-
-        navigate(`${process.env.PUBLIC_URL}/dashboard/default/${layoutURL}`);
-
-      })
-      .catch((error) => {
-        console.log(error);
-        const errorMessage = error.response && error.response.data
-          ? error.response.data
-          : 'Something went wrong. Please try again.';
-        toast.error(errorMessage);
-      });
+      navigate(`${process.env.PUBLIC_URL}/dashboard/default/${layoutURL}`);
+    } catch (error) {
+      console.error('Login error:', error);
+      const errorMessage = error.response && error.response.data
+        ? error.response.data
+        : 'Something went wrong. Please try again.';
+      toast.error(errorMessage);
+    }
   };
 
   return (

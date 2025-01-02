@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useState, useEffect, useCallback } from "react";
 import {
   Col,
   Nav,
@@ -12,7 +12,7 @@ import {
   Input,
 } from "reactstrap";
 import { H6, P } from "../../../../../AbstractElements";
-import axios from "axios";
+import axios from "../../../../../utils/axios";
 import Swal from "sweetalert2";
 import config from "../../../../../config";
 
@@ -80,59 +80,77 @@ const DeviceManager = ({ callback = () => {} }) => {
     }
   };
 
+  // Fetch device data
   const fetchDeviceData = async () => {
     try {
-      const response = await axios.get(config.hostname+"/device");
+      const response = await axios.get(`/device`);
       if (response.data && response.data.success) {
         setDeviceList(response.data.data);
       } else {
         throw new Error("Failed to fetch device data");
       }
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch device data");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStoreData = async () => {
-    try {
-      const response = await axios.get(config.hostname+"/store");
-      if (response.data && response.data.success) {
-        setStoreList(response.data.data);
-      } else {
-        throw new Error("Failed to fetch store data");
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const fetchRegionData = async () => {
-    try {
-      const response = await axios.get(config.hostname+"/region");
-      if (response.data && response.data.success) {
-        setRegionList(response.data.data);
-      } else {
-        throw new Error("Failed to fetch region data");
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
+  // Fetch organization data
   const fetchOrgData = async () => {
     try {
-      const response = await axios.get(
-        config.hostname+"/organization"
-      );
+      const response = await axios.get(`/organization`);
       if (response.data && response.data.success) {
         setOrgList(response.data.data);
       } else {
         throw new Error("Failed to fetch organization data");
       }
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch organization data");
+      }
+    }
+  };
+
+  // Fetch store data
+  const fetchStoreData = async () => {
+    try {
+      const response = await axios.get(`/store`);
+      if (response.data && response.data.success) {
+        setStoreList(response.data.data);
+      } else {
+        throw new Error("Failed to fetch store data");
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch store data");
+      }
+    }
+  };
+
+  // Fetch region data
+  const fetchRegionData = async () => {
+    try {
+      const response = await axios.get(`/region`);
+      if (response.data && response.data.success) {
+        setRegionList(response.data.data);
+      } else {
+        throw new Error("Failed to fetch region data");
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch region data");
+      }
     }
   };
 
@@ -192,7 +210,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
     try {
       // Check if device ID already exists (excluding current device)
-      const deviceResponse = await axios.get(config.hostname+"/device");
+      const deviceResponse = await axios.get(`/device`);
       const existingDevices = deviceResponse.data.data;
       
       const deviceWithSameId = existingDevices.find(
@@ -221,7 +239,7 @@ const DeviceManager = ({ callback = () => {} }) => {
         active,
       };
       const response = await axios.put(
-        `${config.hostname}/device/${selectedDevice._id}`,
+        `/device/${selectedDevice._id}`,
         updatedData
       );
       if (response.data.success) {
@@ -261,7 +279,7 @@ const DeviceManager = ({ callback = () => {} }) => {
     if (result.isConfirmed) {
       try {
         const response = await axios.delete(
-          `${config.hostname}/device/${id}`
+          `/device/${id}`
         );
         if (response.data.success) {
           fetchDeviceData();
@@ -292,7 +310,7 @@ const DeviceManager = ({ callback = () => {} }) => {
 
     if (newDeviceId && newDeviceId !== selectedDevice.device_id) {
       try {
-        const response = await axios.get(config.hostname+"/device");
+        const response = await axios.get(`/device`);
         const existingDevices = response.data.data;
         
         const deviceWithSameId = existingDevices.find(

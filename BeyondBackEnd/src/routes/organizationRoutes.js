@@ -3,18 +3,17 @@ const {
   createOrganization,
   getOrganizationById,
   updateOrganizationById,
-  getAllOrganizations, 
+  getAllOrganizations, // New controller for fetching all records
 } = require('../controllers/organizationController');
-const validateToken = require('./validateToken');
 const router = express.Router();
 
 // Route to create an organization
-router.post('/create', validateToken, createOrganization);
+router.post('/create', createOrganization);
 
 // Route to update an organization by ID
-router.put('/:id', validateToken, updateOrganizationById);
+router.put('/:id', updateOrganizationById);
 
 // Route to get all organizations
-router.get('/', validateToken, getAllOrganizations);
+router.get('/', getAllOrganizations);
   
 module.exports = router;

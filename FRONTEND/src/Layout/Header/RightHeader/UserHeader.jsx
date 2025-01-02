@@ -9,23 +9,23 @@ import { Account, Admin, Inbox, LogOut, Taskboard } from "../../../Constant";
 
 const UserHeader = () => {
   const history = useNavigate();
-  const [profile, setProfile] = useState("");
-  const [name, setName] = useState("Emay Walter");
+  const [profile, setProfile] = useState(man);
+  const [name, setName] = useState("");
   const { layoutURL } = useContext(CustomizerContext);
-  const authenticated = JSON.parse(localStorage.getItem("authenticated"));
-  const auth0_profile = JSON.parse(localStorage.getItem("auth0_profile"));
 
   useEffect(() => {
     setProfile(localStorage.getItem("profileURL") || man);
-    setName(localStorage.getItem("Name") ? localStorage.getItem("Name") : name);
+    setName(localStorage.getItem("Name") || localStorage.getItem("loginUser") || "User");
   }, []);
 
   const Logout = () => {
-    localStorage.removeItem("profileURL");
     localStorage.removeItem("token");
-    localStorage.removeItem("auth0_profile");
+    localStorage.removeItem("islogin");
+    localStorage.removeItem("authenticated");
+    localStorage.removeItem("loginUser");
+    localStorage.removeItem("loginUserId");
+    localStorage.removeItem("profileURL");
     localStorage.removeItem("Name");
-    localStorage.setItem("authenticated", false);
     history(`${process.env.PUBLIC_URL}/login`);
   };
 
@@ -39,36 +39,39 @@ const UserHeader = () => {
         <Image
           attrImage={{
             className: "b-r-10 m-0",
-            src: `${authenticated ? auth0_profile.picture : profile}`,
+            src: profile,
             alt: "",
           }}
         />
         <div className="media-body">
-          <span>{authenticated ? auth0_profile.name : name}</span>
+          <span>{name}</span>
           <P attrPara={{ className: "mb-0 font-roboto" }}>
             {Admin} <i className="middle fa fa-angle-down"></i>
           </P>
         </div>
       </div>
-      <UL attrUL={{ className: "simple-list profile-dropdown onhover-show-div" }}>
+      <UL attrUL={{ className: "profile-dropdown onhover-show-div" }}>
         <LI
           attrLI={{
             onClick: () => UserMenuRedirect(`${process.env.PUBLIC_URL}/app/users/profile/${layoutURL}`),
-          }}>
+          }}
+        >
           <User />
           <span>{Account} </span>
         </LI>
         <LI
           attrLI={{
             onClick: () => UserMenuRedirect(`${process.env.PUBLIC_URL}/app/email-app/${layoutURL}`),
-          }}>
+          }}
+        >
           <Mail />
           <span>{Inbox}</span>
         </LI>
         <LI
           attrLI={{
             onClick: () => UserMenuRedirect(`${process.env.PUBLIC_URL}/app/todo-app/todo/${layoutURL}`),
-          }}>
+          }}
+        >
           <FileText />
           <span>{Taskboard}</span>
         </LI>

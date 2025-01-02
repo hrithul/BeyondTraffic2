@@ -7,7 +7,7 @@ import ChartDataSelector from './ChartDataSelector';
 import ChartTypeSelector, { chartTypes } from './ChartTypeSelector';
 import PieDonutChart from './PieDonutChart';
 import { useSelector } from "react-redux";
-import axios from "axios";
+import axios from "../../../utils/axios";
 import config from "../../../config"
 
 // Register ChartJS components
@@ -221,7 +221,7 @@ const Chartpage = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get(config.hostname + "/metrics");
+        const response = await axios.get(`${config.hostname}/metrics`);
         const metrics = Array.isArray(response.data) ? response.data : [response.data];
         setMetricsData(metrics.reduce((acc, metric) => {
           const date = metric?.Metrics?.ReportData?.Report?.["@Date"];
@@ -232,9 +232,14 @@ const Chartpage = () => {
           return acc;
         }, {}));
         calculateMetrics(metricsData);
+        setError(null);  // Clear any previous errors
       } catch (error) {
         console.error("Error fetching metrics:", error);
-        setError("Failed to fetch metrics data");
+        if (error.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else {
+          setError("Failed to fetch metrics data");
+        }
       } finally {
         setLoading(false);
       }

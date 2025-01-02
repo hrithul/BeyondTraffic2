@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from "react";
+import React, { Fragment, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Row,
@@ -16,11 +16,14 @@ import { Users } from "react-feather";
 import Swal from "sweetalert2";
 import defaultuser from "../../../../assets/images/user/user.png";
 import config from "../../../../config";
+import axios from "../../../../utils/axios";
+
 const CreateStore = () => {
   const [modal, setModal] = useState(false);
   const [regionData, setRegionData] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(""); // State to store selected region
   const [organizationId, setOrganizationId] = useState(""); // State to store organization_id
+  const [error, setError] = useState(null);
 
   const {
     register,
@@ -39,30 +42,40 @@ const CreateStore = () => {
   // Fetch region data from the API
   const fetchRegionData = async () => {
     try {
-      const response = await fetch(config.hostname+"/region");
-      const result = await response.json();
-      if (response.ok) {
-        setRegionData(result.data);
+      const response = await axios.get(`/region`);
+      if (response.data && response.data.success) {
+        setRegionData(response.data.data);
       } else {
-        console.error("Failed to fetch region data:", result.message);
+        throw new Error("Failed to fetch region data");
       }
     } catch (error) {
-      console.error("Error fetching region data:", error);
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch region data");
+      }
     }
   };
 
   // Fetch organization data
   const fetchOrganizationId = async () => {
     try {
-      const response = await fetch(config.hostname+"/organization");
-      const result = await response.json();
-      if (response.ok && result.data && result.data.length > 0) {
-        setOrganizationId(result.data[0]._id);
+      const response = await axios.get(`/organization`);
+      if (response.data && response.data.success) {
+        if (response.data.data && response.data.data.length > 0) {
+          setOrganizationId(response.data.data[0]._id);
+        } else {
+          throw new Error("Failed to fetch organization data");
+        }
       } else {
-        console.error("Failed to fetch organization data:", result.message);
+        throw new Error("Failed to fetch organization data");
       }
     } catch (error) {
-      console.error("Error fetching organization data:", error);
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch organization data");
+      }
     }
   };
 
@@ -113,10 +126,10 @@ const CreateStore = () => {
 
     try {
       // Check if store code already exists
-      const checkResponse = await fetch(config.hostname+"/store");
-      const existingStores = await checkResponse.json();
+      const checkResponse = await axios.get(`/store`);
+      const existingStores = checkResponse.data.data;
       
-      if (existingStores.data.some(store => store.store_code === data.store_code.toUpperCase())) {
+      if (existingStores.some(store => store.store_code === data.store_code.toUpperCase())) {
         Swal.fire({
           icon: "error",
           title: "Validation Error",
@@ -127,21 +140,14 @@ const CreateStore = () => {
         return;
       }
 
-      const response = await fetch(config.hostname+"/store/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          organization_id: organizationId,
-          region_id: selectedRegionObj.code,
-          store_code: data.store_code.toUpperCase(),
-          store_name: data.store_name.trim(),
-        }),
+      const response = await axios.post(`/store/create`, {
+        organization_id: organizationId,
+        region_id: selectedRegionObj.code,
+        store_code: data.store_code.toUpperCase(),
+        store_name: data.store_name.trim(),
       });
 
-      const result = await response.json();
-      if (response.ok) {
+      if (response.data && response.data.success) {
         Swal.fire({
           icon: "success",
           title: "Success!",
@@ -151,15 +157,14 @@ const CreateStore = () => {
         });
         setModal(false);
       } else {
-        throw new Error(result.message || "Error creating Store");
+        throw new Error(response.data.message || "Error creating Store");
       }
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: error.message || "Failed to create Store",
-        confirmButtonText: "OK",
-      });
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to create Store");
+      }
     }
   };
 
@@ -288,6 +293,11 @@ const CreateStore = () => {
               Cancel
             </Btn>
           </Form>
+          {error && (
+            <div className="alert alert-danger mt-3">
+              {error}
+            </div>
+          )}
         </ModalBody>
       </Modal>
     </Fragment>

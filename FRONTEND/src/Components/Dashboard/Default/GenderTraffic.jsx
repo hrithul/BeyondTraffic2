@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader, Col, Row } from "reactstrap";
 import { H5, UL, LI } from "../../../AbstractElements";
 import ReactApexChart from "react-apexcharts";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import axios from "../../../utils/axios";
 import {
   format,
   subDays,
@@ -17,6 +17,7 @@ import {
   parseISO
 } from "date-fns";
 import config from "../../../config";
+
 const GenderTraffic = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -116,13 +117,17 @@ const GenderTraffic = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get(config.hostname+"/metrics");
+        const response = await axios.get(`${config.hostname}/metrics`);
         const metrics = response.data;
         setMetricsData(metrics);
         calculateMetrics(metrics);
       } catch (error) {
         console.error("Error fetching metrics:", error);
-        setError("Failed to fetch metrics data");
+        if (error.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else {
+          setError("Failed to fetch metrics data");
+        }
       } finally {
         setLoading(false);
       }

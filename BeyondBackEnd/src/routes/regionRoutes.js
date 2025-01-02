@@ -4,24 +4,23 @@ const {
   getRegionById,
   getAllRegions,
   updateRegionById,
-  deleteRegionById
+  deleteRegionById,
 } = require('../controllers/regionController');
-const validateToken = require('./validateToken');
 const router = express.Router();
 
-// Create a new region
-router.post('/create', validateToken, createRegion);
+// Route to create a new region
+router.post('/create', createRegion);
 
-// Get a region by ID
-router.get('/:id', validateToken, getRegionById);
+// Route to get a region by ID
+router.get('/:id', getRegionById);
 
-// Get all regions
-router.get('/', validateToken, getAllRegions);
+// Route to get all regions
+router.get('/', getAllRegions);
 
-// Update a region
-router.put('/:id', validateToken, updateRegionById);
+// Route to update a region by ID
+router.put('/:id', updateRegionById);
 
-// Delete a region
-router.delete('/:id', validateToken, deleteRegionById);
+// Route to delete a region by ID
+router.delete('/:id', deleteRegionById);
 
 module.exports = router;

@@ -1,12 +1,30 @@
 const express = require('express');
-const { getAllMetrics, getMetricsById } = require('../controllers/metricsController');
-const validateToken = require('./validateToken');
 const router = express.Router();
+const { getAllMetrics, getMetricsById } = require('../controllers/metricsController');
+const jwt = require('jsonwebtoken');
 
-// Get all metrics with optional filters
-router.get('/', validateToken, getAllMetrics);
+// Middleware to validate JWT token
+const validateToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+    
+    if (!token) {
+        return res.sendStatus(401); // If no token, return unauthorized
+    }
 
-// Get metrics by ID
-router.get('/:id', validateToken, getMetricsById);
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error('Token verification error:', err);
+            return res.status(403).json({ message: 'Invalid token.' }); // Return forbidden if token is invalid
+        }
+        req.user = user;
+        next(); // Proceed to the next middleware or request handler
+    });
+};
+
+// Apply validateToken middleware to all metrics routes
+router.use(validateToken);
+
+router.get('/', getAllMetrics);
+router.get('/:id', getMetricsById);
 
 module.exports = router;

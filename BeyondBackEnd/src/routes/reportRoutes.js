@@ -1,27 +1,20 @@
 const express = require('express');
-const {
-  createReport,
-  getReports,
-  getReportById,
-  updateReport,
-  deleteReport
-} = require('../controllers/reportController');
-const validateToken = require('./validateToken');
 const router = express.Router();
+const reportController = require('../controllers/reportController');
 
 // Create a new report
-router.post('/', validateToken, createReport);
+router.post('/', reportController.createReport);
 
 // Get all reports
-router.get('/', validateToken, getReports);
+router.get('/', reportController.getReports);
 
-// Get a single report by ID
-router.get('/:id', validateToken, getReportById);
+// Get a single report
+router.get('/:id', reportController.getReportById);
 
 // Update a report
-router.put('/:id', validateToken, updateReport);
+router.put('/:id', reportController.updateReport);
 
 // Delete a report
-router.delete('/:id', validateToken, deleteReport);
+router.delete('/:id', reportController.deleteReport);
 
 module.exports = router;

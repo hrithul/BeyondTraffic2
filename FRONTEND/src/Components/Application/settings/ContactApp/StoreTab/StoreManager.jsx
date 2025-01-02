@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useState, useEffect, useCallback } from "react";
 import {
   Col,
   Nav,
@@ -12,9 +12,9 @@ import {
   Input,
 } from "reactstrap";
 import { Image, H6, P } from "../../../../../AbstractElements";
-import axios from "axios";
-import Swal from "sweetalert2";
+import axios from "../../../../../utils/axios";
 import config from "../../../../../config";
+import Swal from "sweetalert2";
 
 const StoreManager = ({ callback = () => {} }) => {
   const [orgList, setOrgList] = useState([]);
@@ -34,14 +34,18 @@ const StoreManager = ({ callback = () => {} }) => {
   // Fetch organization and region data
   const fetchOrgData = async () => {
     try {
-      const response = await axios.get(config.hostname+"/store");
+      const response = await axios.get(`/store`);
       if (response.data && response.data.success) {
         setOrgList(response.data.data);
       } else {
         throw new Error("Failed to fetch store data");
       }
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch store data");
+      }
     } finally {
       setLoading(false);
     }
@@ -50,14 +54,18 @@ const StoreManager = ({ callback = () => {} }) => {
   // Fetch region data from the backend
   const fetchRegionData = async () => {
     try {
-      const response = await axios.get(config.hostname+"/region");
+      const response = await axios.get(`/region`);
       if (response.data && response.data.success) {
         setRegionList(response.data.data); 
       } else {
         throw new Error("Failed to fetch region data");
       }
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to fetch region data");
+      }
     }
   };
 
@@ -79,7 +87,7 @@ const StoreManager = ({ callback = () => {} }) => {
         region_id: updatedRegionId,
       };
       const response = await axios.put(
-        `${config.hostname}/store/${selectedItem._id}`,
+        `/store/${selectedItem._id}`,
         updatedData
       );
       if (response.data.success) {
@@ -95,13 +103,12 @@ const StoreManager = ({ callback = () => {} }) => {
       } else {
         throw new Error("Failed to update store data");
       }
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: err.message || 'Failed to update store',
-        confirmButtonText: 'OK'
-      });
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(error.response?.data?.message || "Failed to update store data");
+      }
     }
   };
 
@@ -119,7 +126,7 @@ const StoreManager = ({ callback = () => {} }) => {
     if (result.isConfirmed) {
       try {
         const response = await axios.delete(
-          `${config.hostname}/store/${id}`
+          `/store/${id}`
         );
         if (response.data.success) {
           fetchOrgData();
@@ -133,13 +140,12 @@ const StoreManager = ({ callback = () => {} }) => {
         } else {
           throw new Error("Failed to delete store");
         }
-      } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error!',
-          text: err.message || 'Failed to delete store',
-          confirmButtonText: 'OK'
-        });
+      } catch (error) {
+        if (error.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else {
+          setError(error.response?.data?.message || "Failed to delete store");
+        }
       }
     }
   };

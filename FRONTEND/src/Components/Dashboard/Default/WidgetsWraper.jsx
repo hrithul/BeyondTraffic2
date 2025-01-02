@@ -3,7 +3,7 @@ import { Col, Row } from 'reactstrap';
 import { useSelector } from 'react-redux';
 import Widgets1 from '../../Common/CommonWidgets/Widgets1';
 import Widgets2 from '../../Common/CommonWidgets/Widgets2';
-import axios from 'axios';
+import axios from '../../../utils/axios';
 import { format, subDays, startOfMonth, startOfWeek, endOfMonth, endOfWeek, subMonths, subWeeks, startOfYear  } from 'date-fns';
 import config from "../../../config";
 const WidgetsWrapper = () => {
@@ -32,13 +32,19 @@ const WidgetsWrapper = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get(`${config.hostname}/metrics`);
+        const response = await axios.get(`/metrics`);
         const metrics = response.data;
         setMetricsData(metrics);
         calculateMetrics(metrics, dateFilter, deviceFilter);
+        setError(null);  // Clear any previous errors
       } catch (error) {
         console.error('Error fetching metrics:', error);
-        setError('Failed to fetch metrics data');
+        if (error.response?.status === 403) {
+          setError('Access to metrics is restricted. Please contact your administrator.');
+        } else {
+          setError('Failed to fetch metrics data');
+        }
+        // Don't clear metricsData on error to keep showing last valid data
       } finally {
         setLoading(false);
       }
@@ -47,7 +53,7 @@ const WidgetsWrapper = () => {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dateFilter, deviceFilter]);
 
   useEffect(() => {
     if (metricsData.length > 0) {
