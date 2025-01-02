@@ -67,7 +67,7 @@ const DeviceStatus = () => {
       <CardBody>
         <CardTitle tag="h5" className="mb-3 text-center">Device Status</CardTitle>
         {syncData && syncData.length > 0 ? (
-          <Table responsive rounded hover bordered className="mb-0 rounded-sm">
+          <Table responsive hover bordered className="mb-0">
             <thead className="text-center">
               <tr>
                 <th>Device ID</th>
