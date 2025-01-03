@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from "react";
+import { useState, Fragment } from "react";
 import { useForm } from "react-hook-form";
 import {
   Row,
@@ -15,203 +15,111 @@ import { Btn } from "../../../../AbstractElements";
 import { Users } from "react-feather";
 import Swal from "sweetalert2";
 import axios from "../../../../utils/axios";
-import config from "../../../../config";
+import { Accordion } from 'react-bootstrap';
 
-const CreateUser = () => {
+const CreateUser = ({ onSuccess }) => {
   const [modal, setModal] = useState(false);
-  const [regionData, setRegionData] = useState([]);
-  const [storeData, setStoreData] = useState([]);
-  const [selectedRegion, setSelectedRegion] = useState("");
-  const [selectedStore, setSelectedStore] = useState("");
-  const [organizationId, setOrganizationId] = useState("");
-  const [active, setActive] = useState("true");
-  const [filteredStores, setFilteredStores] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [permissions, setPermissions] = useState({
+    dashboard: false,
+    analytics: false,
+    reports: false,
+    dataGrid: false,
+    accessGeneralSettings: false,
+    manageGeneralSettings: false,
+    accessTenants: false,
+    manageTenants: false,
+    manageUsers: false,
+    manageUserProfiles: false,
+    manageConfigurations: false,
+    accessLogs: false,
+    manageScheduleReport: false,
+    tenantPortal: false,
+  });
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    clearErrors,
     reset,
   } = useForm();
 
   const toggle = () => {
     setModal(!modal);
-    clearErrors();
-    setSelectedRegion("");
-    setSelectedStore("");
-    setFilteredStores([]);
+    reset();
+    setPermissions({
+      dashboard: false,
+      analytics: false,
+      reports: false,
+      dataGrid: false,
+      accessGeneralSettings: false,
+      manageGeneralSettings: false,
+      accessTenants: false,
+      manageTenants: false,
+      manageUsers: false,
+      manageUserProfiles: false,
+      manageConfigurations: false,
+      accessLogs: false,
+      manageScheduleReport: false,
+      tenantPortal: false,
+    });
+    setSelectedItems([]);
   };
 
-  // Fetch region data
-  const fetchRegionData = async () => {
-    try {
-      const response = await axios.get(`/region`);
-      if (response.data && response.data.success) {
-        setRegionData(response.data.data);
-      } else {
-        throw new Error("Failed to fetch region data");
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else {
-        setError(error.response?.data?.message || "Failed to fetch region data");
-      }
-    }
+  const formatPermissionName = (perm) => {
+    return perm.split(/(?=[A-Z])/).join(" ").replace(/^\w/, c => c.toUpperCase());
   };
 
-  // Fetch store data
-  const fetchStoreData = async () => {
-    try {
-      const response = await axios.get(`/store`);
-      if (response.data && response.data.success) {
-        setStoreData(response.data.data);
-      } else {
-        throw new Error("Failed to fetch store data");
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else {
-        setError(error.response?.data?.message || "Failed to fetch store data");
-      }
-    }
-  };
-
-  // Fetch organization data
-  const fetchOrganizationId = async () => {
-    try {
-      const response = await axios.get(`/organization`);
-      if (response.data && response.data.success) {
-        if (response.data.data && response.data.data.length > 0) {
-          setOrganizationId(response.data.data[0]._id);
-        } else {
-          throw new Error("No organization data found");
-        }
-      } else {
-        throw new Error("Failed to fetch organization data");
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else {
-        setError(error.response?.data?.message || "Failed to fetch organization data");
-      }
-    }
-  };
-
-  useEffect(() => {
-    // Initial data fetch
-    fetchOrganizationId();
-    fetchRegionData();
-    fetchStoreData();
-
-    // Set up intervals for region and store data
-    const regionInterval = setInterval(() => {
-      fetchRegionData();
-    }, 2000);
-
-    const storeInterval = setInterval(() => {
-      fetchStoreData();
-    }, 2000);
-
-    // Cleanup
-    return () => {
-      clearInterval(regionInterval);
-      clearInterval(storeInterval);
-    };
-  }, []); // Empty dependency array since we're using intervals
-
-  // Handle region selection change
-  const handleRegionChange = (e) => {
-    const regionCode = e.target.value;
+  const handlePermissionChange = (perm, checked) => {
+    setPermissions({
+      ...permissions,
+      [perm]: checked,
+    });
     
-    // Find the region object to get its ID
-    const selectedRegionObj = regionData.find(region => region.code === regionCode);
-    if (!selectedRegionObj) {
-      console.error("Region not found:", regionCode);
-      return;
-    }
-    
-    setSelectedRegion(regionCode);
-    setSelectedStore(""); // Reset store selection when region changes
-    
-    // Filter stores based on selected region's ID or code (for backward compatibility)
-    if (regionCode) {
-      const storesInRegion = storeData.filter(store => {
-        // Check both region_id formats (MongoDB ID or region code)
-        return store.region_id === selectedRegionObj._id || store.region_id === regionCode;
-      });
-      setFilteredStores(storesInRegion);
-      
-      if (storesInRegion.length === 0) {
-        Swal.fire({
-          icon: "info",
-          title: "No Stores Found",
-          text: "No stores available in the selected region",
-          timer: 2000,
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false
-        });
-      }
+    if (checked) {
+      setSelectedItems(prev => [...prev, perm]);
     } else {
-      setFilteredStores([]);
+      setSelectedItems(prev => prev.filter(item => item !== perm));
     }
   };
 
-  // Function to handle API call for creating a device
-  const AddDevice = async (data) => {
+  const onSubmit = async (data) => {
     try {
-      // Check if device ID already exists
-      const checkResponse = await axios.get(`/device`);
-      const existingDevices = checkResponse.data.data;
-      
-      if (existingDevices.some(device => device.device_id === data.device_id)) {
-        Swal.fire({
-          icon: "error",
-          title: "Validation Error",
-          text: "Device ID already exists",
-          confirmButtonText: "OK",
-        });
-        return;
-      }
+      // Convert permissions object to array of enabled permissions
+      const permissionsArray = Object.entries(permissions)
+        .filter(([_, value]) => value)
+        .map(([key, _]) => key);
 
-      const response = await axios.post(`/device/create`, {
-        organization_id: organizationId,
-        region_id: selectedRegion,
-        store_code: selectedStore,
-        device_id: data.device_id,
-        device_name: data.device_name,
-        mac_address: data.mac_address,
-        ip_address: data.ip_address,
-        serial_number: data.serial_number,
-        active: active,
-      });
+      const userData = {
+        first_name: data.first_name,
+        username: data.username,
+        password: data.password,
+        permissions: permissionsArray,
+      };
 
+      const response = await axios.post(`/users/createuser`, userData);
       if (response.data && response.data.success) {
         Swal.fire({
           icon: "success",
-          title: "Success!",
-          text: "Device created successfully",
+          title: "Success",
+          text: "User created successfully!",
           timer: 1500,
           showConfirmButton: false,
           position: "top-end",
           toast: true,
         });
-        setModal(false);
-        reset();
+        toggle();
+        if (onSuccess) onSuccess();
       } else {
-        throw new Error(response.data.message || "Error creating device");
+        throw new Error(response.data?.message || "Failed to create user");
       }
     } catch (error) {
-      if (error.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else {
-        setError(error.response?.data?.message || "Failed to create device");
-      }
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Failed to create user",
+      });
     }
   };
 
@@ -219,191 +127,207 @@ const CreateUser = () => {
     <Fragment>
       <Btn
         attrBtn={{
+          color: "",
           className:
             "badge-light-primary align-items-center btn-mail d-flex justify-content-start w-100 emptyContact",
-          color: "",
           onClick: toggle,
         }}
       >
         <Users className="me-2" />
-        New Device
+        Create New User
       </Btn>
-
       <Modal
         className="modal-bookmark"
         isOpen={modal}
         toggle={toggle}
-        size="lg"
+        size="md"
       >
-        <ModalHeader toggle={toggle}>Add Device</ModalHeader>
+        <ModalHeader toggle={toggle}>Create New User</ModalHeader>
         <ModalBody>
           <Form
-            className="form-bookmark needs-validation"
-            onSubmit={handleSubmit(AddDevice)}
+            className="form-bookmark needs-validation d-flex flex-wrap gap-1"
+            onSubmit={handleSubmit(onSubmit)}
           >
-            <div className="form-row">
-              <FormGroup className="col-md-12">
-                <Label>Device ID</Label>
-                <input
-                  className={`form-control ${errors.device_id ? "is-invalid" : ""}`}
-                  name="device_id"
-                  type="text"
-                  placeholder="Enter device ID"
-                  {...register("device_id", {
-                    required: "Device ID is required",
-                  })}
-                />
-                {errors.device_id && (
-                  <div className="invalid-feedback d-block">
-                    {errors.device_id.message}
-                  </div>
-                )}
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>Device Name</Label>
-                <input
-                  className={`form-control ${errors.device_name ? "is-invalid" : ""}`}
-                  name="device_name"
-                  type="text"
-                  placeholder="Enter device name"
-                  {...register("device_name", {
-                    required: "Device name is required",
-                  })}
-                />
-                {errors.device_name && (
-                  <div className="invalid-feedback d-block">
-                    {errors.device_name.message}
-                  </div>
-                )}
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>MAC Address</Label>
-                <input
-                  className={`form-control ${errors.mac_address ? "is-invalid" : ""}`}
-                  name="mac_address"
-                  type="text"
-                  placeholder="Enter MAC address"
-                  {...register("mac_address", {
-                    required: "MAC address is required",
-                  })}
-                />
-                {errors.mac_address && (
-                  <div className="invalid-feedback d-block">
-                    {errors.mac_address.message}
-                  </div>
-                )}
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>IP Address</Label>
-                <input
-                  className={`form-control ${errors.ip_address ? "is-invalid" : ""}`}
-                  name="ip_address"
-                  type="text"
-                  placeholder="Enter IP address"
-                  {...register("ip_address", {
-                    required: "IP address is required",
-                  })}
-                />
-                {errors.ip_address && (
-                  <div className="invalid-feedback d-block">
-                    {errors.ip_address.message}
-                  </div>
-                )}
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>Serial Number</Label>
-                <input
-                  className={`form-control ${errors.serial_number ? "is-invalid" : ""}`}
-                  name="serial_number"
-                  type="text"
-                  placeholder="Enter serial number"
-                  {...register("serial_number", {
-                    required: "Serial number is required",
-                  })}
-                />
-                {errors.serial_number && (
-                  <div className="invalid-feedback d-block">
-                    {errors.serial_number.message}
-                  </div>
-                )}
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>Status</Label>
-                <Input
-                  type="select"
-                  name="active"
-                  value={active}
-                  onChange={(e) => setActive(e.target.value)}
-                  className="form-control"
-                >
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </Input>
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>Region</Label>
-                <Input
-                  type="select"
-                  name="region_id"
-                  value={selectedRegion}
-                  onChange={handleRegionChange}
-                  className={`form-control ${
-                    !selectedRegion ? "is-invalid" : ""
-                  }`}
-                >
-                  <option value="">Select Region</option>
-                  {regionData.map((region) => (
-                    <option key={region.code} value={region.code}>
-                      {region.name} - {region.code}
-                    </option>
-                  ))}
-                </Input>
-                {!selectedRegion && (
-                  <div className="invalid-feedback">Please select a region</div>
-                )}
-              </FormGroup>
+            <FormGroup className="col-md-12">
+              <Label>First Name</Label>
+              <input
+                className={`form-control ${
+                  errors.first_name ? "is-invalid" : ""
+                }`}
+                name="first_name"
+                type="text"
+                {...register("first_name", {
+                  required: "First name is required",
+                })}
+              />
+              {errors.first_name && (
+                <div className="invalid-feedback">
+                  {errors.first_name.message}
+                </div>
+              )}
+            </FormGroup>
+            <FormGroup className="col-md-12">
+              <Label>Username</Label>
+              <input
+                className={`form-control ${
+                  errors.username ? "is-invalid" : ""
+                }`}
+                name="username"
+                type="text"
+                {...register("username", {
+                  required: "Username is required",
+                })}
+              />
+              {errors.username && (
+                <div className="invalid-feedback">
+                  {errors.username.message}
+                </div>
+              )}
+            </FormGroup>
+            <FormGroup className="col-md-12">
+              <Label>Password</Label>
+              <input
+                className={`form-control ${
+                  errors.password ? "is-invalid" : ""
+                }`}
+                name="password"
+                type="password"
+                {...register("password", {
+                  required: "Password is required",
+                })}
+              />
+              {errors.password && (
+                <div className="invalid-feedback">
+                  {errors.password.message}
+                </div>
+              )}
+            </FormGroup>
+            <Row className="w-100 m-0 p-0">
+            <h5 className="mb-3">Permissions</h5>
+            <Accordion defaultActiveKey="0" className="w-100">
+              <Accordion.Item eventKey="0">
+                <Accordion.Header>Appearance</Accordion.Header>
+                <Accordion.Body>
+                  {["dashboard", "analytics", "reports", "dataGrid"].map(
+                    (perm) => (
+                      <FormGroup
+                        check
+                        key={perm}
+                        className="checkbox checkbox-primary"
+                      >
+                        <Input
+                          id={`checkbox-${perm}`}
+                          type="checkbox"
+                          checked={permissions[perm]}
+                          onChange={(e) =>
+                            handlePermissionChange(perm, e.target.checked)
+                          }
+                        />
+                        <Label for={`checkbox-${perm}`}>
+                          {formatPermissionName(perm)}
+                        </Label>
+                      </FormGroup>
+                    )
+                  )}
+                </Accordion.Body>
+              </Accordion.Item>
 
-              <FormGroup className="col-md-12">
-                <Label>Store</Label>
-                <Input
-                  type="select"
-                  name="store_code"
-                  value={selectedStore}
-                  onChange={(e) => setSelectedStore(e.target.value)}
-                  className={`form-control ${
-                    !selectedStore ? "is-invalid" : ""
-                  }`}
-                  disabled={!selectedRegion}
-                >
-                  <option value="">Select Store</option>
-                  {filteredStores.map((store) => (
-                    <option key={store._id} value={store.store_code}>
-                      {store.store_name} - {store.store_code}
-                    </option>
+              <Accordion.Item eventKey="1">
+                <Accordion.Header className="w-100">
+                  General Settings
+                </Accordion.Header>
+                <Accordion.Body>
+                  {[
+                    "accessGeneralSettings",
+                    "manageGeneralSettings",
+                    "accessTenants",
+                    "manageTenants",
+                  ].map((perm) => (
+                    <FormGroup
+                      check
+                      key={perm}
+                      className="checkbox checkbox-primary"
+                    >
+                      <Input
+                        id={`checkbox-${perm}`}
+                        type="checkbox"
+                        checked={permissions[perm]}
+                        onChange={(e) =>
+                          handlePermissionChange(perm, e.target.checked)
+                        }
+                      />
+                      <Label for={`checkbox-${perm}`}>
+                        {formatPermissionName(perm)}
+                      </Label>
+                    </FormGroup>
                   ))}
-                </Input>
-                {!selectedStore && selectedRegion && (
-                  <div className="invalid-feedback">Please select a store</div>
-                )}
-              </FormGroup>
-            </div>
+                </Accordion.Body>
+              </Accordion.Item>
 
-            <Btn
-              attrBtn={{
-                type: "submit",
-                color: "secondary",
-                className: "me-2",
-              }}
-            >
-              Save
-            </Btn>
-            <Btn attrBtn={{ color: "primary", onClick: toggle }}>Cancel</Btn>
+              <Accordion.Item eventKey="2">
+                <Accordion.Header className="w-100">
+                  Administrative Tasks
+                </Accordion.Header>
+                <Accordion.Body>
+                  {[
+                    "manageUsers",
+                    "manageUserProfiles",
+                    "manageConfigurations",
+                    "accessLogs",
+                    "manageScheduleReport",
+                    "tenantPortal",
+                  ].map((perm) => (
+                    <FormGroup
+                      check
+                      key={perm}
+                      className="checkbox checkbox-primary"
+                    >
+                      <Input
+                        id={`checkbox-${perm}`}
+                        type="checkbox"
+                        checked={permissions[perm]}
+                        onChange={(e) =>
+                          handlePermissionChange(perm, e.target.checked)
+                        }
+                      />
+                      <Label for={`checkbox-${perm}`}>
+                        {formatPermissionName(perm)}
+                      </Label>
+                    </FormGroup>
+                  ))}
+                </Accordion.Body>
+              </Accordion.Item>
+            </Accordion>
+
+            {selectedItems.length > 0 && (
+              <div className="mt-4">
+                <h6>Selected Permissions:</h6>
+                <div className="selected-items p-3 border rounded">
+                  {selectedItems.map((item) => (
+                    <span key={item} className="badge bg-primary me-2 mb-2">
+                      {formatPermissionName(item)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            </Row>
+            <Row>
+              <div className="mt-3 d-flex gap-2 justify-content-center w-100">
+                <Btn
+                  attrBtn={{ color: "primary", type: "submit" }}
+                  className="me-2"
+                >
+                  Create User
+                </Btn>
+                <Btn attrBtn={{ color: "secondary", onClick: toggle }}>
+                  Cancel
+                </Btn>
+              </div>
+            </Row>
           </Form>
-          {error && (
-            <div className="alert alert-danger mt-3">
-              {error}
-            </div>
-          )}
+          {error && <div className="alert alert-danger mt-3">{error}</div>}
         </ModalBody>
       </Modal>
     </Fragment>

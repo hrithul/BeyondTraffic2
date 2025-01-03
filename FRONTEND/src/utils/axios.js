@@ -16,11 +16,6 @@ axiosInstance.interceptors.request.use(
       // Send just the token without 'Bearer ' prefix
       config.headers.Authorization = token;
     }
-    console.log('Request config:', {
-      url: config.url,
-      method: config.method,
-      hasToken: !!token
-    });
     return config;
   },
   (error) => {
@@ -32,10 +27,6 @@ axiosInstance.interceptors.request.use(
 // Add a response interceptor to handle auth errors
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log('Response:', {
-      url: response.config.url,
-      status: response.status
-    });
     return response;
   },
   (error) => {

@@ -50,9 +50,7 @@ const Signin = ({ selected }) => {
       navigate(`${process.env.PUBLIC_URL}/dashboard/default/${layoutURL}`);
     } catch (error) {
       console.error('Login error:', error);
-      const errorMessage = error.response && error.response.data
-        ? error.response.data
-        : 'Something went wrong. Please try again.';
+      const errorMessage = "INVALID CREDENTIALS !";
       toast.error(errorMessage);
     }
   };
@@ -69,13 +67,26 @@ const Signin = ({ selected }) => {
                   <P>{"Enter your email & password to login"}</P>
                   <FormGroup>
                     <Label className="col-form-label">{EmailAddress}</Label>
-                    <Input className="form-control" type="email" onChange={(e) => setUserName(e.target.value)} value={userName} />
+                    <Input
+                      className="form-control"
+                      type="email"
+                      onChange={(e) => setUserName(e.target.value)}
+                      value={userName}
+                    />
                   </FormGroup>
                   <FormGroup className="position-relative">
                     <Label className="col-form-label">{Password}</Label>
                     <div className="position-relative">
-                      <Input className="form-control" type={togglePassword ? "text" : "password"} onChange={(e) => setPassword(e.target.value)} value={password} />
-                      <div className="show-hide" onClick={() => setTogglePassword(!togglePassword)}>
+                      <Input
+                        className="form-control"
+                        type={togglePassword ? "text" : "password"}
+                        onChange={(e) => setPassword(e.target.value)}
+                        value={password}
+                      />
+                      <div
+                        className="show-hide"
+                        onClick={() => setTogglePassword(!togglePassword)}
+                      >
                         <span className={togglePassword ? "" : "show"}></span>
                       </div>
                     </div>
@@ -87,10 +98,20 @@ const Signin = ({ selected }) => {
                         {RememberPassword}
                       </Label>
                     </div>
-                    <a className="link" href="#javascript">
-                      {ForgotPassword}
-                    </a>
-                    <Btn attrBtn={{ color: "primary", className: "d-block w-100 mt-2", onClick: (e) => loginAuth(e) }}>{SignIn}</Btn>
+                    <div className="text-end mt-2">
+                      <a href="/forgot-password" className="link">
+                        Forgot Password?
+                      </a>
+                    </div>
+                    <Btn
+                      attrBtn={{
+                        color: "primary",
+                        className: "d-block w-100 mt-2",
+                        onClick: (e) => loginAuth(e),
+                      }}
+                    >
+                      {SignIn}
+                    </Btn>
                   </div>
                 </Form>
               </div>

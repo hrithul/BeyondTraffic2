@@ -276,6 +276,54 @@ const CreateDevice = () => {
                   </div>
                 )}
               </FormGroup>
+              
+              <FormGroup className="col-md-12">
+                <Label>Region</Label>
+                <Input
+                  type="select"
+                  name="region_id"
+                  value={selectedRegion}
+                  onChange={handleRegionChange}
+                  className={`form-control ${
+                    !selectedRegion ? "is-invalid" : ""
+                  }`}
+                >
+                  <option value="">Select Region</option>
+                  {regionData.map((region) => (
+                    <option key={region.code} value={region.code}>
+                      {region.name} - {region.code}
+                    </option>
+                  ))}
+                </Input>
+                {!selectedRegion && (
+                  <div className="invalid-feedback">Please select a region</div>
+                )}
+              </FormGroup>
+
+              <FormGroup className="col-md-12">
+                <Label>Store</Label>
+                <Input
+                  type="select"
+                  name="store_code"
+                  value={selectedStore}
+                  onChange={(e) => setSelectedStore(e.target.value)}
+                  className={`form-control ${
+                    !selectedStore ? "is-invalid" : ""
+                  }`}
+                  disabled={!selectedRegion}
+                >
+                  <option value="">Select Store</option>
+                  {filteredStores.map((store) => (
+                    <option key={store._id} value={store.store_code}>
+                      {store.store_name} - {store.store_code}
+                    </option>
+                  ))}
+                </Input>
+                {!selectedStore && selectedRegion && (
+                  <div className="invalid-feedback">Please select a store</div>
+                )}
+              </FormGroup>
+
               <FormGroup className="col-md-12">
                 <Label>MAC Address</Label>
                 <input
@@ -339,52 +387,6 @@ const CreateDevice = () => {
                   <option value="true">Active</option>
                   <option value="false">Inactive</option>
                 </Input>
-              </FormGroup>
-              <FormGroup className="col-md-12">
-                <Label>Region</Label>
-                <Input
-                  type="select"
-                  name="region_id"
-                  value={selectedRegion}
-                  onChange={handleRegionChange}
-                  className={`form-control ${
-                    !selectedRegion ? "is-invalid" : ""
-                  }`}
-                >
-                  <option value="">Select Region</option>
-                  {regionData.map((region) => (
-                    <option key={region.code} value={region.code}>
-                      {region.name} - {region.code}
-                    </option>
-                  ))}
-                </Input>
-                {!selectedRegion && (
-                  <div className="invalid-feedback">Please select a region</div>
-                )}
-              </FormGroup>
-
-              <FormGroup className="col-md-12">
-                <Label>Store</Label>
-                <Input
-                  type="select"
-                  name="store_code"
-                  value={selectedStore}
-                  onChange={(e) => setSelectedStore(e.target.value)}
-                  className={`form-control ${
-                    !selectedStore ? "is-invalid" : ""
-                  }`}
-                  disabled={!selectedRegion}
-                >
-                  <option value="">Select Store</option>
-                  {filteredStores.map((store) => (
-                    <option key={store._id} value={store.store_code}>
-                      {store.store_name} - {store.store_code}
-                    </option>
-                  ))}
-                </Input>
-                {!selectedStore && selectedRegion && (
-                  <div className="invalid-feedback">Please select a store</div>
-                )}
               </FormGroup>
             </div>
 

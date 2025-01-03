@@ -25,15 +25,10 @@ const PersonalTab = ({ activeTab }) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/organization", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.get("/organization");
 
-      if (response.ok) {
-        const { data } = await response.json();
+      if (response.data && response.data.success) {
+        const { data } = response.data;
 
         if (data && data.length > 0) {
           const record = data[0]; // Load the first record into the form
@@ -49,10 +44,10 @@ const PersonalTab = ({ activeTab }) => {
           console.log("No records found.");
         }
       } else {
-        console.error("Failed to fetch records. Status:", response.status);
+        console.error("Failed to fetch records.");
       }
     } catch (error) {
-      console.error("Error fetching organization details:", error.message);
+      console.error("Error fetching organization details:", error.response?.data?.message || error.message);
     } finally {
       setIsLoading(false);
     }
@@ -71,66 +66,43 @@ const PersonalTab = ({ activeTab }) => {
     try {
 
       // Check if records exist in the collection
-      const checkResponse = await fetch("/organization", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const checkResponse = await axios.get("/organization");
 
-      if (!checkResponse.ok) {
-        throw new Error("Failed to check records in the collection");
-      }
+      if (checkResponse.data && checkResponse.data.success) {
+        const { data: records } = checkResponse.data;
 
-      const { data: records } = await checkResponse.json();
+        if (records && records.length === 0) {
+          // Create a new record if none exist
+          const createResponse = await axios.post("/organization/create", data);
 
-      if (records && records.length === 0) {
-        // Create a new record if none exist
-        const createResponse = await fetch(
-          "/organization/create",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
+          if (createResponse.data && createResponse.data.success) {
+            alert("Organization created successfully!");
+            reset();
+            fetchData();
+          } else {
+            const createError = createResponse.data;
+            alert(`Error creating: ${createError.message}`);
           }
-        );
-
-        if (createResponse.ok) {
-          alert("Organization created successfully!");
-          reset();
-          fetchData();
         } else {
-          const createError = await createResponse.json();
-          alert(`Error creating: ${createError.message}`);
+          // Update the first record if it exists
+
+
+          const updateResponse = await axios.put(`/organization/${records[0]._id}`, data);
+
+          if (updateResponse.data && updateResponse.data.success) {
+            alert("Organization updated successfully!");
+            reset();
+            fetchData();
+          } else {
+            const updateError = updateResponse.data;
+            alert(`Error updating: ${updateError.message}`);
+          }
         }
       } else {
-        // Update the first record if it exists
-
-
-        const updateResponse = await fetch(
-          `/organization/${records[0]._id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          }
-        );
-
-        if (updateResponse.ok) {
-          alert("Organization updated successfully!");
-          reset();
-          fetchData();
-        } else {
-          const updateError = await updateResponse.json();
-          alert(`Error updating: ${updateError.message}`);
-        }
+        console.error("Failed to check records in the collection.");
       }
     } catch (error) {
-      console.error("Error in create/update process:", error.message);
+      console.error("Error in create/update process:", error.response?.data?.message || error.message);
       alert("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

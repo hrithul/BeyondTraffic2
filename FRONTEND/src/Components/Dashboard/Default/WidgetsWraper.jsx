@@ -7,6 +7,7 @@ import Widgets2 from '../../Common/CommonWidgets/Widgets2';
 import axios from '../../../utils/axios';
 import { format, subDays, startOfMonth, startOfWeek, endOfMonth, endOfWeek, subMonths, subWeeks, startOfYear  } from 'date-fns';
 import ShimmerCard from '../../Common/ShimmerCard';
+
 const WidgetsWrapper = () => {
   const [metricsData, setMetricsData] = useState([]);
   const [widgetStats, setWidgetStats] = useState({
@@ -418,4 +419,4 @@ const WidgetsWrapper = () => {
   );
 };
 
-export default WidgetsWrapper;
+export default React.memo(WidgetsWrapper);

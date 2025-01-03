@@ -93,10 +93,10 @@ const NavComponent = ({ callbackActive }) => {
         <NavItem>
           <a
             href="#javascript"
-            className={activeTab === "4" ? "active" : ""}
+            className={activeTab === "5" ? "active" : ""}
             onClick={() => {
-              setActiveTab("4");
-              callbackActive("4");
+              setActiveTab("5");
+              callbackActive("5");
             }}
           >
             <span className="title">Users Settings</span>

@@ -16,6 +16,7 @@ import ErrorPage2 from '../Components/Pages/ErrorPages/ErrorPage401';
 import ErrorPage3 from '../Components/Pages/ErrorPages/ErrorPage403';
 import ErrorPage4 from '../Components/Pages/ErrorPages/ErrorPage404';
 import Logins from '../Auth/Signin';
+import ForgotPassword from '../Auth/ForgotPassword';
 import LoginForm from '../Components/Pages/Auth/LoginForm';
 import ComingBgImg from '../Components/Pages/ComingSoon/ComingBgImg';
 import ComingBgVideo from '../Components/Pages/ComingSoon/ComingBgVideo';
@@ -23,7 +24,8 @@ import Error500 from '../Components/Pages/ErrorPages/ErrorPage500';
 import Error503 from '../Components/Pages/ErrorPages/ErrorPage503';
 
 export const authRoutes = [
-  { path: `${process.env.PUBLIC_URL}/login`, Component: <Logins /> },
+  { path: '/login', Component: <Logins /> },
+  { path: '/forgot-password', Component: <ForgotPassword /> },
   { path: `${process.env.PUBLIC_URL}/pages/authentication/login-simple/:layout`, Component: <LoginForm /> },
   { path: `${process.env.PUBLIC_URL}/pages/authentication/login-img/:layout`, Component: <LoginOne /> },
   { path: `${process.env.PUBLIC_URL}/pages/authentication/login-bg-img/:layout`, Component: <LoginTwo /> },
