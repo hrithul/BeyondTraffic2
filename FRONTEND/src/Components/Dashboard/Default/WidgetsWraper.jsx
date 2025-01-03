@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Col, Row } from 'reactstrap';
+import { Col, Row, Card, CardBody} from 'reactstrap';
 import { useSelector } from 'react-redux';
+import { H5 } from "../../../AbstractElements";
 import Widgets1 from '../../Common/CommonWidgets/Widgets1';
 import Widgets2 from '../../Common/CommonWidgets/Widgets2';
 import axios from '../../../utils/axios';
 import { format, subDays, startOfMonth, startOfWeek, endOfMonth, endOfWeek, subMonths, subWeeks, startOfYear  } from 'date-fns';
-import config from "../../../config";
+import ShimmerCard from '../../Common/ShimmerCard';
 const WidgetsWrapper = () => {
   const [metricsData, setMetricsData] = useState([]);
   const [widgetStats, setWidgetStats] = useState({
@@ -320,6 +321,60 @@ const WidgetsWrapper = () => {
     title: 'Total',
     total: widgetStats.totalTraffic || 0,
   };
+
+  if (loading) {
+    return (
+      <>
+        <Col xxl="auto" xl="4" sm="6" className="box-col-6">
+          <Row>
+            <Col xl="12">
+              <ShimmerCard height="10px" heighth="15px"/>
+            </Col>
+            <Col xl="12">
+              <ShimmerCard height="10px" heighth="10px"/>
+            </Col>
+          </Row>
+        </Col>
+        <Col xxl="auto" xl="4" sm="6" className="box-col-6">
+          <Row>
+            <Col xl="12">
+              <ShimmerCard height="10px" heighth="15px"/>
+            </Col>
+            <Col xl="12">
+              <ShimmerCard height="10px" heighth="10px"/>
+            </Col>
+          </Row>
+        </Col>
+        <Col xxl="auto" xl="12" sm="6" className="box-col-6">
+          <Row>
+            <Col xxl="12" xl="4" className="box-col-12">
+              <ShimmerCard height="100%" heightcontainer="0.875rem"/>
+            </Col>
+            <Col xxl="12" xl="4" className="box-col-12">
+              <ShimmerCard height="100%" heightcontainer="0.875rem"/>
+            </Col>
+            <Col xxl="12" xl="4" className="box-col-12">
+              <ShimmerCard height="100%" heightcontainer="0.875rem"/>
+            </Col>
+          </Row>
+        </Col>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-6">
+        <Card>
+          <CardBody>
+            <div className="error-container">
+              <H5 className="text-danger">{error}</H5>
+            </div>
+          </CardBody>
+        </Card>
+      </Col>
+    );
+  }
 
   return (
     <>

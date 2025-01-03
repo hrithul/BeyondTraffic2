@@ -8,6 +8,7 @@ import PersonalTab from './PersonalTab';
 import ContactAppContext from '../../../../_helper/Contact';
 import StoreTab from './StoreTab';
 import DeviceTab from './DeviceTab';
+import UsersTab from './UsersTab';
 
 const TabComponent = ({ activeTab }) => {
     const { users } = useContext(ContactAppContext);
@@ -27,7 +28,7 @@ const TabComponent = ({ activeTab }) => {
                     <DeviceTab/>
                 </TabPane>
                 <TabPane tabId="5">
-                <NoDataFoundClass title={Ideas} />
+                    <UsersTab/>
                 </TabPane>
                 <TabPane tabId="6">
                     <NoDataFoundClass title={Important} />

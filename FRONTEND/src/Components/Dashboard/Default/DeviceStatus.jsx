@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardTitle, Spinner, Table } from 'reactstrap';
 import { formatDistanceToNow } from 'date-fns';
 import axios from '../../../utils/axios';
+import ShimmerCard from '../../Common/ShimmerCard';
 
 const DeviceStatus = () => {
   const [syncData, setSyncData] = useState(null);
@@ -45,8 +46,8 @@ const DeviceStatus = () => {
   if (loading) {
     return (
       <Card className="mt-3">
-        <CardBody className="text-center">
-          <Spinner color="primary" />
+        <CardBody>
+          <ShimmerCard />
         </CardBody>
       </Card>
     );

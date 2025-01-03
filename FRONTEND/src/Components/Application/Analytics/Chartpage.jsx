@@ -9,6 +9,7 @@ import PieDonutChart from './PieDonutChart';
 import { useSelector } from "react-redux";
 import axios from "../../../utils/axios";
 import config from "../../../config"
+import ShimmerCard from "../../Common/ShimmerCard";
 
 // Register ChartJS components
 ChartJS.register(
@@ -461,7 +462,27 @@ const Chartpage = () => {
     }
   };
 
-  if (error) return <div>{error}</div>;
+  if (loading) {
+    return (
+      <Col xxl="12" xl="12" lg="12" md="12" sm="12" className="box-col-12">
+        <ShimmerCard height="23.75rem" />
+      </Col>
+    );
+  }
+
+  if (error) {
+    return (
+      <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-6">
+        <Card>
+          <CardBody>
+            <div className="error-container">
+              <H5 className="text-danger">{error}</H5>
+            </div>
+          </CardBody>
+        </Card>
+      </Col>
+    );
+  }
 
   return (
     <Col className="box-col-8">

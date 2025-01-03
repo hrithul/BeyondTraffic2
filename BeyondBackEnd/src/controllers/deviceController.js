@@ -102,3 +102,14 @@ exports.getLastSyncDateTime = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Return true if the device is found, false otherwise
+exports.getDeviceByDevSiteId = async (store_code, device_id) => {
+  try {
+    const device = await Device.findOne({ store_code: store_code, device_id: device_id });
+    return !!device; // Returns true if the device exists, false otherwise
+  } catch (error) {
+    console.error("Error finding device:", error.message);
+    return false; // Return false in case of any error
+  }
+};

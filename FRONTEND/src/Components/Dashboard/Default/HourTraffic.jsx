@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, CardBody, CardHeader, Col } from "reactstrap";
 import { H5 } from "../../../AbstractElements";
 import ReactApexChart from "react-apexcharts";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import axios from "../../../utils/axios";
-import DateFilter from "../../../CommonElements/Breadcrumbs/DateFilter";
 import {
   format,
   subDays,
@@ -16,10 +15,12 @@ import {
   subWeeks,
   startOfYear,
 } from "date-fns";
-import config from "../../../config"
+import config from "../../../config";
+import ShimmerCard from "../../Common/ShimmerCard";
 
 const HourTraffic = () => {
-  const dispatch = useDispatch();
+  const dateFilter = useSelector((state) => state.dateFilter.filter);
+  const deviceFilter = useSelector((state) => state.deviceFilter);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [metricsData, setMetricsData] = useState([]);
@@ -29,14 +30,6 @@ const HourTraffic = () => {
         name: "Total",
         data: Array(24).fill(0),
       },
-      // {
-      //   name: "Male",
-      //   data: Array(24).fill(0),
-      // },
-      // {
-      //   name: "Female",
-      //   data: Array(24).fill(0),
-      // },
     ],
     options: {
       chart: {
@@ -51,7 +44,7 @@ const HourTraffic = () => {
       },
       stroke: {
         curve: "smooth",
-        width: [4, 3, 3],
+        width: 4,
       },
       markers: {
         size: 4,
@@ -62,92 +55,71 @@ const HourTraffic = () => {
       },
       xaxis: {
         categories: Array.from({ length: 24 }, (_, i) => {
-          const hour = i;
-          const period = hour >= 12 ? "PM" : "AM";
-          const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-          return `${hour12} ${period}`;
-
+          const hour = i === 0 ? '12' : (i > 12 ? (i - 12).toString() : i.toString());
+          const period = i >= 12 ? 'PM' : 'AM';
+          return `${hour}${period}`;
         }),
         title: {
-          text: "- Hours -",
+          text: "Hour of Day",
           style: {
-            fontSize: "0.75rem",
-            fontWeight: "semi-bold"
-          },
-        },
-        labels: {
-          style: {
-            fontSize: "9px",  
+            fontSize: "0.875rem",
+            fontWeight: 500,
           },
         },
       },
       yaxis: {
         title: {
-          text: "- Traffic -",
+          text: "Traffic Count",
           style: {
-            fontSize: "0.75rem",
-            fontWeight: "semi-bold"
-
+            fontSize: "0.875rem",
+            fontWeight: 500,
           },
         },
         labels: {
-          style: {
-            fontSize: "9px",
-          },
+          formatter: (value) => Math.round(value),
         },
-        min: 0,
       },
-      colors: ["#7366FF", "#008FFB", "#FF4560"],
+      colors: ["#7366FF"],
       tooltip: {
         y: {
-          formatter: function (val) {
-            return val + " visitors";
-          },
+          formatter: (value) => Math.round(value) + " visitors",
         },
       },
       grid: {
         borderColor: "#f1f1f1",
-      },
-      legend: {
-        position: "top",
+        padding: {
+          bottom: 15,
+        },
       },
     },
   });
 
-  const dateFilter = useSelector((state) => state.dateFilter.filter);
-  const deviceFilter = useSelector((state) => state.deviceFilter);
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const response = await axios.get(`${config.hostname}/metrics`);
-        const metrics = response.data;
-        setMetricsData(metrics);
-        calculateMetrics(metrics);
-      } catch (error) {
-        console.error("Error fetching metrics:", error);
-        if (error.response?.status === 401) {
-          setError("Session expired. Please login again.");
-        } else {
-          setError("Failed to fetch metrics data");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMetrics();
-    const interval = setInterval(fetchMetrics, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (metricsData.length > 0) {
-      calculateMetrics(metricsData);
+  // Memoize the fetchData function
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(`${config.hostname}/metrics`);
+      const metrics = response.data;
+      setMetricsData(metrics);
+      calculateMetrics(metrics);
+    } catch (err) {
+      console.error("Error fetching metrics:", err);
+      setError(err.response?.status === 401 
+        ? "Session expired. Please login again." 
+        : "Failed to fetch metrics data");
+    } finally {
+      setLoading(false);
     }
-  }, [dateFilter, deviceFilter, metricsData]);
+  }, [dateFilter, deviceFilter]);
 
-  const calculateMetrics = (metrics) => {
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 5 * 60 * 1000); // Refresh every 5 minutes
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const calculateMetrics = useCallback((metrics) => {
     const today = new Date();
     const todayDate = format(today, "yyyy-MM-dd");
     const yesterday = subDays(today, 1);
@@ -201,8 +173,6 @@ const HourTraffic = () => {
 
     // Initialize hourly data array with zeros
     const hourlyData = Array(24).fill(0);
-    // const maleData = Array(24).fill(0);
-    // const femaleData = Array(24).fill(0);
 
     metrics.forEach((metric) => {
       const deviceId = metric.Metrics?.["@DeviceId"];
@@ -221,59 +191,60 @@ const HourTraffic = () => {
               const hour = parseInt(count["@StartTime"].split(":")[0], 10);
               // Sum up traffic for this hour
               const totalTraffic = parseInt(count["@Exits"], 10) || 0;
-              // const maleTraffic = parseInt(count["@ExitsMaleCustomer"], 10) || 0;
-              // const femaleTraffic = parseInt(count["@ExitsFemaleCustomer"], 10) || 0;
               
               hourlyData[hour] += totalTraffic;
-              // maleData[hour] += maleTraffic;
-              // femaleData[hour] += femaleTraffic;
             });
           }
         });
       }
     });
 
-    setChartData(prevData => ({
-      ...prevData,
-      series: [
-        {
-          name: "Total",
-          data: hourlyData
-        },
-        // {
-        //   name: "Male",
-        //   data: maleData
-        // },
-        // {
-        //   name: "Female",
-        //   data: femaleData
-        // }
-      ]
+    setChartData(prev => ({
+      ...prev,
+      series: [{
+        name: "Total",
+        data: hourlyData,
+      }],
     }));
-  };
+  }, [dateFilter, deviceFilter]);
+
+  if (loading) {
+    return (
+      <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-12">
+        <ShimmerCard height="23.75rem" />
+      </Col>
+    );
+  }
+
+  if (error) {
+    return (
+      <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-12">
+        <Card>
+          <CardBody>
+            <div className="error-container">
+              <H5 className="text-danger">{error}</H5>
+            </div>
+          </CardBody>
+        </Card>
+      </Col>
+    );
+  }
 
   return (
-    <Col xxl="6" lg="12" className="box-col-12">
+    <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-12">
       <Card>
         <CardHeader className="card-no-border">
-          <div className="d-flex justify-content-between">
+          <div className="header-top">
             <H5>Hourly Traffic Distribution</H5>
-            {/* <DateFilter
-              onFilterSelect={(filter) => {
-                // Update the Redux store with the selected filter
-                dispatch({ type: "SET_DATE_FILTER", payload: filter });
-              }}
-              initialFilter={dateFilter}
-            /> */}
           </div>
         </CardHeader>
         <CardBody className="pt-0">
-          <div className="hourly-traffic-chart">
+          <div id="hour-traffic-chart">
             <ReactApexChart
-              type="line"
-              height={350}
               options={chartData.options}
               series={chartData.series}
+              type="line"
+              height={350}
             />
           </div>
         </CardBody>
@@ -282,4 +253,4 @@ const HourTraffic = () => {
   );
 };
 
-export default HourTraffic;
+export default React.memo(HourTraffic);

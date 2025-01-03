@@ -82,6 +82,26 @@ const NavComponent = ({ callbackActive }) => {
             <span className="title">Cameras</span>
           </a>
         </NavItem>
+
+        <li>
+          <hr />
+        </li>
+
+        <NavItem>
+          <span className="main-title">Users</span>
+        </NavItem>
+        <NavItem>
+          <a
+            href="#javascript"
+            className={activeTab === "4" ? "active" : ""}
+            onClick={() => {
+              setActiveTab("4");
+              callbackActive("4");
+            }}
+          >
+            <span className="title">Users Settings</span>
+          </a>
+        </NavItem>
       </Nav>
     </Fragment>
   );

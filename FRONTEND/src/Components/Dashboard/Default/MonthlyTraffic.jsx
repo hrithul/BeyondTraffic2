@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardBody, CardHeader, Col } from "reactstrap";
 import { H5 } from "../../../AbstractElements";
 import ReactApexChart from "react-apexcharts";
@@ -14,8 +14,12 @@ import {
   subMonths,
   subWeeks,
   parseISO,
+  startOfYear,
+  isAfter,
+  isBefore,
 } from "date-fns";
 import config from "../../../config";
+import ShimmerCard from "../../Common/ShimmerCard";
 
 const MonthlyTraffic = () => {
   const dateFilter = useSelector((state) => state.dateFilter.filter);
@@ -29,14 +33,6 @@ const MonthlyTraffic = () => {
         name: "Total",
         data: Array(12).fill(0),
       },
-      // {
-      //   name: "Male",
-      //   data: Array(12).fill(0),
-      // },
-      // {
-      //   name: "Female",
-      //   data: Array(12).fill(0),
-      // },
     ],
     options: {
       chart: {
@@ -90,7 +86,7 @@ const MonthlyTraffic = () => {
       },
       yaxis: {
         title: {
-          text: "- Traffic -",
+          text: "- Traffic Count -",
           style: {
             fontSize: "0.75rem",
             fontWeight: "semi-bold",
@@ -102,6 +98,7 @@ const MonthlyTraffic = () => {
             fontWeight: 500,
             colors: "#333",
           },
+          formatter: (value) => Math.round(value),
         },
         min: 0,
       },
@@ -125,10 +122,10 @@ const MonthlyTraffic = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await axios.get(`/metrics`);
+        setLoading(true);
+        const response = await axios.get(`${config.hostname}/metrics`);
         const metrics = response.data;
         setMetricsData(metrics);
-        calculateMetrics(metrics);
       } catch (error) {
         console.error("Error fetching metrics:", error);
         if (error.response?.status === 401) {
@@ -144,20 +141,11 @@ const MonthlyTraffic = () => {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (metricsData.length > 0) {
-      calculateMetrics(metricsData);
-    }
-  }, [dateFilter, deviceFilter, metricsData]);
+  }, [dateFilter, deviceFilter]);
 
   const calculateMetrics = (metrics) => {
-    // Initialize arrays for each month
     const monthlyData = {
       total: Array(12).fill(0),
-      // male: Array(12).fill(0),
-      // female: Array(12).fill(0),
     };
 
     // Filter metrics based on device filter
@@ -169,67 +157,79 @@ const MonthlyTraffic = () => {
       return Object.values(selectedDevices).flat().some(device => device.device_id === deviceId);
     });
 
-    // Process each metric
-    filteredMetrics.forEach((metric) => {
+    const today = new Date();
+    const todayDate = format(today, "yyyy-MM-dd");
+    const yesterday = subDays(today, 1);
+    const yesterdayDate = format(yesterday, "yyyy-MM-dd");
+    const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    const monthStart = format(startOfMonth(today), "yyyy-MM-dd");
+    const yearStart = format(startOfYear(today), "yyyy-MM-dd");
+    const prevWeekEnd = format(subDays(startOfWeek(today, { weekStartsOn: 1 }), 1), "yyyy-MM-dd");
+    const prevWeekStart = format(
+      startOfWeek(subDays(startOfWeek(today, { weekStartsOn: 1 }), 1), { weekStartsOn: 1 }),
+      "yyyy-MM-dd"
+    );
+    const prevMonthEnd = format(subDays(startOfMonth(today), 1), "yyyy-MM-dd");
+    const prevMonthStart = format(startOfMonth(subDays(startOfMonth(today), 1)), "yyyy-MM-dd");
+
+    let filterStart, filterEnd;
+    switch (dateFilter) {
+      case "today":
+        filterStart = todayDate;
+        filterEnd = todayDate;
+        break;
+      case "week":
+        filterStart = weekStart;
+        filterEnd = todayDate;
+        break;
+      case "month":
+        filterStart = monthStart;
+        filterEnd = todayDate;
+        break;
+      case "year":
+        filterStart = yearStart;
+        filterEnd = todayDate;
+        break;
+      case "yesterday":
+        filterStart = yesterdayDate;
+        filterEnd = yesterdayDate;
+        break;
+      case "lastWeek":
+        filterStart = prevWeekStart;
+        filterEnd = prevWeekEnd;
+        break;
+      case "lastMonth":
+        filterStart = prevMonthStart;
+        filterEnd = prevMonthEnd;
+        break;
+      case "lastYear":
+        filterStart = format(subMonths(today, 12), "yyyy-MM-dd");
+        filterEnd = format(subDays(subMonths(today, 11), 1), "yyyy-MM-dd");
+        break;
+      default:
+        filterStart = todayDate;
+        filterEnd = todayDate;
+    }
+
+    // Convert filter dates to Date objects once
+    const filterStartDate = parseISO(filterStart);
+    const filterEndDate = parseISO(filterEnd);
+
+    // Process metrics using reduce for better efficiency
+    monthlyData.total = filteredMetrics.reduce((acc, metric) => {
       const reportDate = parseISO(metric.Metrics.ReportData.Report["@Date"]);
-      const month = reportDate.getMonth();
-
-      // Apply date filter
-      let includeMetric = true;
-      switch (dateFilter) {
-        case "today":
-          includeMetric = format(reportDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-          break;
-        case "yesterday":
-          includeMetric = format(reportDate, "yyyy-MM-dd") === format(subDays(new Date(), 1), "yyyy-MM-dd");
-          break;
-        case "week":
-          const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-          const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
-          includeMetric = reportDate >= weekStart && reportDate <= weekEnd;
-          break;
-        case "month":
-          const monthStart = startOfMonth(new Date());
-          const monthEnd = endOfMonth(new Date());
-          includeMetric = reportDate >= monthStart && reportDate <= monthEnd;
-          break;
-        case "year":
-          includeMetric = reportDate.getFullYear() === new Date().getFullYear();
-          break;
-        case "lastMonth":
-          const lastMonthStart = startOfMonth(subMonths(new Date(), 1));
-          const lastMonthEnd = endOfMonth(subMonths(new Date(), 1));
-          includeMetric = reportDate >= lastMonthStart && reportDate <= lastMonthEnd;
-          break;
-        case "lastWeek":
-          const lastWeekStart = startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 });
-          const lastWeekEnd = endOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 });
-          includeMetric = reportDate >= lastWeekStart && reportDate <= lastWeekEnd;
-          break;
-        case "lastYear":
-          includeMetric = reportDate.getFullYear() === new Date().getFullYear() - 1;
-          break;
-        default:
-          includeMetric = true;
+      
+      if (isAfter(reportDate, filterStartDate) && isBefore(reportDate, filterEndDate)) {
+        const month = reportDate.getMonth();
+        
+        metric.Metrics.ReportData.Report.Object.forEach((obj) => {
+          if (obj["@ObjectType"] === "0") {
+            acc[month] += obj.Count.reduce((sum, count) => sum + (parseInt(count["@Exits"]) || 0), 0);
+          }
+        });
       }
-
-      if (!includeMetric) return;
-
-      // Sum up the counts for each object
-      metric.Metrics.ReportData.Report.Object.forEach((obj) => {
-        if (obj["@ObjectType"] === "0") { // Entrance Traffic
-          obj.Count.forEach((count) => {
-            const exits = parseInt(count["@Exits"]) || 0;
-            // const exitsMale = parseInt(count["@ExitsMaleCustomer"]) || 0;
-            // const exitsFemale = parseInt(count["@ExitsFemaleCustomer"]) || 0;
-
-            monthlyData.total[month] += exits;
-            // monthlyData.male[month] += exitsMale;
-            // monthlyData.female[month] += exitsFemale;
-          });
-        }
-      });
-    });
+      return acc;
+    }, Array(12).fill(0));
 
     // Update chart data
     setChartData((prevState) => ({
@@ -239,53 +239,55 @@ const MonthlyTraffic = () => {
           name: "Total",
           data: monthlyData.total,
         },
-        // {
-        //   name: "Male",
-        //   data: monthlyData.male,
-        // },
-        // {
-        //   name: "Female",
-        //   data: monthlyData.female,
-        // },
       ],
-      options: {
-        ...prevState.options,
-        xaxis: {
-          ...prevState.options.xaxis,
-          categories: [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-          ],
-        },
-      },
     }));
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  // Memoize metrics calculation
+  const monthlyMetrics = useMemo(() => {
+    if (metricsData.length === 0) return Array(12).fill(0);
+    const metrics = [...metricsData];
+    calculateMetrics(metrics);
+    return chartData.series[0].data;
+  }, [metricsData, dateFilter, deviceFilter]);
+
+  if (loading) {
+    return (
+      <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-6">
+        <ShimmerCard height="23.75rem" />
+      </Col>
+    );
+  }
+
+  if (error) {
+    return (
+      <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-6">
+        <Card>
+          <CardBody>
+            <div className="error-container">
+              <H5 className="text-danger">{error}</H5>
+            </div>
+          </CardBody>
+        </Card>
+      </Col>
+    );
+  }
 
   return (
-    <Col xxl="6" lg="12" className="box-col-12">
+    <Col xxl="6" xl="6" lg="12" md="12" sm="12" className="box-col-6">
       <Card>
         <CardHeader className="card-no-border">
-          <div className="d-flex justify-content-between">
-            <H5>Monthly Traffic Distribution</H5>
-            {/* <DateFilter 
-            onFilterSelect={(filter) => {
-              // Update the Redux store with the selected filter
-              // dispatch({ type: 'SET_DATE_FILTER', payload: filter });
-            }}
-            initialFilter={dateFilter}
-          /> */}
+          <div className="header-top">
+            <H5 className="m-0">Monthly Traffic Distribution</H5>
           </div>
         </CardHeader>
         <CardBody className="pt-0">
           <div className="monthly-traffic-chart">
             <ReactApexChart
-              type="line"
-              height={350}
               options={chartData.options}
               series={chartData.series}
+              type="line"
+              height={350}
             />
           </div>
         </CardBody>

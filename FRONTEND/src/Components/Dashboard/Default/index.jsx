@@ -4,6 +4,7 @@ import { Breadcrumbs } from "../../../AbstractElements";
 import GreetingCard from "./GreetingCard";
 import WidgetsWrapper from "./WidgetsWraper";
 import DeviceStatus from "./DeviceStatus";
+import ShimmerCard from "../../Common/ShimmerCard";
 
 // Lazy load the traffic components
 const GenderTraffic = lazy(() => import("./GenderTraffic"));
@@ -13,9 +14,7 @@ const MonthlyTraffic = lazy(() => import("./MonthlyTraffic"));
 
 // Loading placeholder
 const LoadingPlaceholder = () => (
-  <div className="chart-loader">
-    <div className="loading-spinner"></div>
-  </div>
+  <ShimmerCard height="300px" />
 );
 
 const Dashboard = () => {
